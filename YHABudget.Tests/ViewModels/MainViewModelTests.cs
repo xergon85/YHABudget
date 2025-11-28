@@ -9,6 +9,7 @@ public class MainViewModelTests : IDisposable
 {
     private readonly BudgetDbContext _context;
     private readonly ITransactionService _transactionService;
+    private readonly ICategoryService _categoryService;
     private readonly ICalculationService _calculationService;
 
     public MainViewModelTests()
@@ -19,6 +20,7 @@ public class MainViewModelTests : IDisposable
 
         _context = new BudgetDbContext(options);
         _transactionService = new TransactionService(_context);
+        _categoryService = new CategoryService(_context);
         _calculationService = new CalculationService(_context);
     }
 
@@ -26,7 +28,7 @@ public class MainViewModelTests : IDisposable
     public void Constructor_InitializesWithOverviewAsCurrentViewModel()
     {
         // Arrange & Act
-        var mainViewModel = new MainViewModel(_transactionService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
 
         // Assert
         Assert.NotNull(mainViewModel.CurrentViewModel);
@@ -37,7 +39,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToOverviewCommand_ChangesCurrentViewModelToOverview()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
         mainViewModel.CurrentViewModel = null; // Set to null to test navigation
 
         // Act
@@ -52,7 +54,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToTransactionsCommand_ChangesCurrentViewModelToTransactions()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
 
         // Act
         mainViewModel.NavigateToTransactionsCommand.Execute(null);
@@ -66,7 +68,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToRecurringCommand_ChangesCurrentViewModelToRecurring()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
 
         // Act
         mainViewModel.NavigateToRecurringCommand.Execute(null);
@@ -80,7 +82,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToSettingsCommand_ChangesCurrentViewModelToSettings()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
 
         // Act
         mainViewModel.NavigateToSettingsCommand.Execute(null);
@@ -94,7 +96,7 @@ public class MainViewModelTests : IDisposable
     public void CurrentViewModel_WhenChanged_RaisesPropertyChangedEvent()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
         bool propertyChangedRaised = false;
         mainViewModel.PropertyChanged += (sender, args) =>
         {

@@ -4,11 +4,194 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="450"
-             d:DesignWidth="800"
+             d:DesignHeight="600"
+             d:DesignWidth="1000"
              Background="{StaticResource BackgroundLightBrush}">
     <Grid Margin="30">
-        <TextBlock Text="Transaktioner - Coming Soon"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0"
+                   Text="Transaktioner"
                    Style="{StaticResource SectionHeaderStyle}"/>
+
+        <!-- Filters -->
+        <Border Grid.Row="1"
+                Style="{StaticResource CardStyle}"
+                Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock Text="Filter"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,15"/>
+
+                <StackPanel Orientation="Horizontal">
+                    <!-- Category Filter -->
+                    <TextBlock Text="Kategori:"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"/>
+                    <ComboBox Width="200"
+                              ItemsSource="{Binding Categories}"
+                              SelectedValue="{Binding SelectedCategoryFilter}"
+                              SelectedValuePath="Id"
+                              DisplayMemberPath="Name"
+                              Margin="0,0,20,0"
+                              VerticalContentAlignment="Center"
+                              Padding="8,8,8,8"/>
+
+                    <!-- Clear Filters Button -->
+                    <Button Content="Rensa filter"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding ClearFiltersCommand}"
+                            Padding="15,8"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Transaction List -->
+        <Border Grid.Row="2"
+                Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Button Grid.Row="0"
+                        Content="+ Ny transaktion"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,0,15"/>
+
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <DataGrid ItemsSource="{Binding Transactions}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserResizeRows="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              BorderThickness="0"
+                              RowHeight="45"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Disabled"
+                              EnableRowVirtualization="False">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background"
+                                        Value="White"/>
+                                <Setter Property="FontWeight"
+                                        Value="SemiBold"/>
+                                <Setter Property="Padding"
+                                        Value="8"/>
+                                <Setter Property="BorderThickness"
+                                        Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush"
+                                        Value="#E0E0E0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness"
+                                        Value="0"/>
+                                <Setter Property="Padding"
+                                        Value="8"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Padding="{TemplateBinding Padding}"
+                                                    Background="{TemplateBinding Background}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.CellStyle>
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Datum"
+                                                Binding="{Binding Date, StringFormat='{}{0:yyyy-MM-dd}'}"
+                                                Width="120"/>
+
+                            <DataGridTextColumn Header="Beskrivning"
+                                                Binding="{Binding Description}"
+                                                Width="*"/>
+
+                            <DataGridTextColumn Header="Kategori"
+                                                Binding="{Binding Category.Name}"
+                                                Width="150"/>
+
+                            <DataGridTextColumn Header="Belopp"
+                                                Binding="{Binding Amount, StringFormat='{}{0:N0} kr'}"
+                                                Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment"
+                                                Value="Right"/>
+                                        <Setter Property="FontWeight"
+                                                Value="SemiBold"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Type}"
+                                                         Value="Income">
+                                                <Setter Property="Foreground"
+                                                        Value="{StaticResource IncomeBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}"
+                                                         Value="Expense">
+                                                <Setter Property="Foreground"
+                                                        Value="{StaticResource ExpenseBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTemplateColumn Header=""
+                                                    Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="🗑"
+                                                Width="24"
+                                                Height="24"
+                                                FontSize="12"
+                                                Command="{Binding DataContext.DeleteTransactionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding Id}"
+                                                ToolTip="Ta bort"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Total -->
+        <Border Grid.Row="3"
+                Background="{StaticResource SurfaceBrush}"
+                Padding="20"
+                Margin="10,10,10,0"
+                CornerRadius="4">
+            <Grid>
+                <TextBlock Text="Total:"
+                           FontSize="18"
+                           FontWeight="Bold"/>
+                <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N0} kr'}"
+                           HorizontalAlignment="Right"
+                           FontSize="20"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource PrimaryBrush}"/>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

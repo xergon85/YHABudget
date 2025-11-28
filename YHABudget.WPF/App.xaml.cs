@@ -49,6 +49,7 @@ public partial class App : Application
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
             dbContext.Database.EnsureCreated();
+            DatabaseSeeder.SeedDatabase(dbContext);
         }
 
         // Show main window
