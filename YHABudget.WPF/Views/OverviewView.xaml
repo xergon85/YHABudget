@@ -1,0 +1,135 @@
+<UserControl x:Class="YHABudget.WPF.Views.OverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:YHABudget.WPF.Views"
+             mc:Ignorable="d"
+             d:DesignHeight="600"
+             d:DesignWidth="1000"
+             Background="{StaticResource BackgroundLightBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="30">
+            <TextBlock Text="Månadsprognos"
+                       Style="{StaticResource SectionHeaderStyle}"/>
+
+            <!-- Month Selector -->
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,0,0,20">
+                <TextBlock Text="Månad:"
+                           VerticalAlignment="Center"
+                           Margin="0,0,10,0"
+                           FontSize="14"/>
+                <ComboBox Width="200"
+                          Height="30"/>
+            </StackPanel>
+
+            <!-- Summary Card -->
+            <Border Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Income Section -->
+                    <StackPanel Grid.Row="0"
+                                Margin="0,0,0,20">
+                        <TextBlock Text="Inkomster"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource IncomeBrush}"
+                                   Margin="0,0,0,10"/>
+                        <ItemsControl ItemsSource="{Binding IncomeByCategory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding CategoryName}"
+                                                   Margin="10,0,0,0"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Total, StringFormat='{}{0:N0} kr'}"
+                                                   Foreground="{StaticResource IncomeBrush}"
+                                                   FontWeight="SemiBold"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Separator Margin="0,10"/>
+                        <Grid>
+                            <TextBlock Text="Totala inkomster"
+                                       FontWeight="Bold"/>
+                            <TextBlock Text="{Binding TotalIncome, StringFormat='+ {0:N0} kr'}"
+                                       HorizontalAlignment="Right"
+                                       Foreground="{StaticResource IncomeBrush}"
+                                       FontWeight="Bold"
+                                       FontSize="16"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Expenses Section -->
+                    <StackPanel Grid.Row="1"
+                                Margin="0,0,0,20">
+                        <TextBlock Text="Utgifter"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource ExpenseBrush}"
+                                   Margin="0,0,0,10"/>
+                        <ItemsControl ItemsSource="{Binding ExpensesByCategory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding CategoryName}"
+                                                   Margin="10,0,0,0"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Total, StringFormat='{}{0:N0} kr'}"
+                                                   Foreground="{StaticResource ExpenseBrush}"
+                                                   FontWeight="SemiBold"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Separator Margin="0,10"/>
+                        <Grid>
+                            <TextBlock Text="Totala utgifter"
+                                       FontWeight="Bold"/>
+                            <TextBlock Text="{Binding TotalExpenses, StringFormat='- {0:N0} kr'}"
+                                       HorizontalAlignment="Right"
+                                       Foreground="{StaticResource ExpenseBrush}"
+                                       FontWeight="Bold"
+                                       FontSize="16"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Net Balance -->
+                    <Border Grid.Row="2"
+                            Background="{StaticResource PrimaryLightBrush}"
+                            CornerRadius="4"
+                            Padding="15">
+                        <Grid>
+                            <TextBlock Text="Netto"
+                                       FontSize="20"
+                                       FontWeight="Bold"/>
+                            <TextBlock Text="{Binding NetBalance, StringFormat='{}{0:N0} kr'}"
+                                       HorizontalAlignment="Right"
+                                       FontSize="24"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource PrimaryBrush}"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

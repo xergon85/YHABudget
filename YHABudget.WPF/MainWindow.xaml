@@ -4,9 +4,70 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:YHABudget.WPF"
+        xmlns:vm="clr-namespace:YHABudget.Core.ViewModels;assembly=YHABudget.Core"
+        xmlns:views="clr-namespace:YHABudget.WPF.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Budget Planner" Height="700" Width="1200"
+        Background="{StaticResource BackgroundLightBrush}"
+        WindowStartupLocation="CenterScreen">
+    
+    <Window.Resources>
+        <!-- DataTemplates to map ViewModels to Views -->
+        <DataTemplate DataType="{x:Type vm:OverviewViewModel}">
+            <views:OverviewView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TransactionViewModel}">
+            <views:TransactionView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RecurringTransactionViewModel}">
+            <views:RecurringTransactionView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView/>
+        </DataTemplate>
+    </Window.Resources>
+    
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Navigation Bar -->
+        <Border Grid.Row="0" 
+                Background="{StaticResource BackgroundBrush}" 
+                BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="20,15">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Budget Planner" 
+                          FontSize="20" 
+                          FontWeight="Bold"
+                          Foreground="{StaticResource PrimaryBrush}"
+                          VerticalAlignment="Center"
+                          Margin="0,0,40,0"/>
+                
+                <Button Content="Översikt" 
+                        Style="{StaticResource NavigationButtonStyle}"
+                        Command="{Binding NavigateToOverviewCommand}"/>
+                
+                <Button Content="Transaktioner" 
+                        Style="{StaticResource NavigationButtonStyle}"
+                        Command="{Binding NavigateToTransactionsCommand}"/>
+                
+                <Button Content="Återkommande" 
+                        Style="{StaticResource NavigationButtonStyle}"
+                        Command="{Binding NavigateToRecurringCommand}"/>
+                
+                <Button Content="Inställningar" 
+                        Style="{StaticResource NavigationButtonStyle}"
+                        Command="{Binding NavigateToSettingsCommand}"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Content Area -->
+        <ContentControl Grid.Row="1" 
+                       Content="{Binding CurrentViewModel}"
+                       Margin="0"/>
     </Grid>
 </Window>
