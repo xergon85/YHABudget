@@ -4,6 +4,7 @@ using YHABudget.Data.Enums;
 using YHABudget.Data.Models;
 using YHABudget.Data.Services;
 using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 namespace YHABudget.Tests.ViewModels;
 
@@ -35,7 +36,7 @@ public class OverviewViewModelTests : IDisposable
     }
 
     [Fact]
-    public async Task LoadDataCommand_CalculatesTotalIncome()
+    public void LoadDataCommand_CalculatesTotalIncome()
     {
         // Arrange
         var category = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
@@ -58,20 +59,19 @@ public class OverviewViewModelTests : IDisposable
             Description = "Bidrag"
         };
         _context.Transactions.AddRange(transaction1, transaction2);
-        await _context.SaveChangesAsync();
+        _context.SaveChanges();
 
         _viewModel.SelectedMonth = new DateTime(2025, 11, 1);
 
         // Act
         _viewModel.LoadDataCommand.Execute(null);
-        await Task.Delay(100); // Give async operation time to complete
 
         // Assert
         Assert.Equal(43000m, _viewModel.TotalIncome);
     }
 
     [Fact]
-    public async Task LoadDataCommand_CalculatesTotalExpenses()
+    public void LoadDataCommand_CalculatesTotalExpenses()
     {
         // Arrange
         var category = new Category { Id = 1, Name = "Mat", Type = TransactionType.Expense };
@@ -94,20 +94,19 @@ public class OverviewViewModelTests : IDisposable
             Description = "Bensin"
         };
         _context.Transactions.AddRange(transaction1, transaction2);
-        await _context.SaveChangesAsync();
+        _context.SaveChanges();
 
         _viewModel.SelectedMonth = new DateTime(2025, 11, 1);
 
         // Act
         _viewModel.LoadDataCommand.Execute(null);
-        await Task.Delay(100);
 
         // Assert
         Assert.Equal(2100m, _viewModel.TotalExpenses);
     }
 
     [Fact]
-    public async Task LoadDataCommand_CalculatesNetBalance()
+    public void LoadDataCommand_CalculatesNetBalance()
     {
         // Arrange
         var incomeCategory = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
@@ -130,20 +129,19 @@ public class OverviewViewModelTests : IDisposable
             Type = TransactionType.Expense,
             Description = "Utgifter"
         });
-        await _context.SaveChangesAsync();
+        _context.SaveChanges();
 
         _viewModel.SelectedMonth = new DateTime(2025, 11, 1);
 
         // Act
         _viewModel.LoadDataCommand.Execute(null);
-        await Task.Delay(100);
 
         // Assert
         Assert.Equal(12500m, _viewModel.NetBalance);
     }
 
     [Fact]
-    public async Task LoadDataCommand_GroupsIncomeByCategory()
+    public void LoadDataCommand_GroupsIncomeByCategory()
     {
         // Arrange
         var category1 = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
@@ -166,13 +164,12 @@ public class OverviewViewModelTests : IDisposable
             Type = TransactionType.Income,
             Description = "Bidrag"
         });
-        await _context.SaveChangesAsync();
+        _context.SaveChanges();
 
         _viewModel.SelectedMonth = new DateTime(2025, 11, 1);
 
         // Act
         _viewModel.LoadDataCommand.Execute(null);
-        await Task.Delay(100);
 
         // Assert
         Assert.NotNull(_viewModel.IncomeByCategory);
@@ -182,7 +179,7 @@ public class OverviewViewModelTests : IDisposable
     }
 
     [Fact]
-    public async Task LoadDataCommand_GroupsExpensesByCategory()
+    public void LoadDataCommand_GroupsExpensesByCategory()
     {
         // Arrange
         var category1 = new Category { Id = 1, Name = "Mat", Type = TransactionType.Expense };
@@ -205,13 +202,12 @@ public class OverviewViewModelTests : IDisposable
             Type = TransactionType.Expense,
             Description = "Bensin"
         });
-        await _context.SaveChangesAsync();
+        _context.SaveChanges();
 
         _viewModel.SelectedMonth = new DateTime(2025, 11, 1);
 
         // Act
         _viewModel.LoadDataCommand.Execute(null);
-        await Task.Delay(100);
 
         // Assert
         Assert.NotNull(_viewModel.ExpensesByCategory);
@@ -236,6 +232,109 @@ public class OverviewViewModelTests : IDisposable
 
         // Assert
         Assert.True(propertyChangedRaised);
+    }
+
+    [Fact]
+    public void AccountBalance_CalculatesCorrectly_WithIncomeAndExpenses()
+    {
+        // Arrange
+        var incomeCategory = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
+        var expenseCategory = new Category { Id = 2, Name = "Mat", Type = TransactionType.Expense };
+        _context.Categories.AddRange(incomeCategory, expenseCategory);
+        
+        // Add transactions across different months
+        _context.Transactions.Add(new Transaction 
+        { 
+            Amount = 35000m, 
+            Date = new DateTime(2025, 10, 25), 
+            CategoryId = 1, 
+            Type = TransactionType.Income,
+            Description = "Lön Oktober"
+        });
+        _context.Transactions.Add(new Transaction 
+        { 
+            Amount = 35000m, 
+            Date = new DateTime(2025, 11, 25), 
+            CategoryId = 1, 
+            Type = TransactionType.Income,
+            Description = "Lön November"
+        });
+        _context.Transactions.Add(new Transaction 
+        { 
+            Amount = 12000m, 
+            Date = new DateTime(2025, 10, 5), 
+            CategoryId = 2, 
+            Type = TransactionType.Expense,
+            Description = "Utgifter Oktober"
+        });
+        _context.Transactions.Add(new Transaction 
+        { 
+            Amount = 15000m, 
+            Date = new DateTime(2025, 11, 5), 
+            CategoryId = 2, 
+            Type = TransactionType.Expense,
+            Description = "Utgifter November"
+        });
+        _context.SaveChanges();
+
+        // Create a fresh ViewModel to trigger CalculateAccountBalance
+        var transactionService = new TransactionService(_context);
+        var calculationService = new CalculationService(_context);
+        var viewModel = new OverviewViewModel(transactionService, calculationService);
+
+        // Act - Account balance should be calculated on initialization
+
+        // Assert - Total income (70000) - Total expenses (27000) = 43000
+        Assert.Equal(43000m, viewModel.AccountBalance);
+    }
+
+    [Fact]
+    public void AccountBalance_RemainsConstant_WhenMonthSelectionChanges()
+    {
+        // Arrange
+        var incomeCategory = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
+        var expenseCategory = new Category { Id = 2, Name = "Mat", Type = TransactionType.Expense };
+        _context.Categories.AddRange(incomeCategory, expenseCategory);
+        
+        _context.Transactions.Add(new Transaction 
+        { 
+            Amount = 35000m, 
+            Date = new DateTime(2025, 10, 25), 
+            CategoryId = 1, 
+            Type = TransactionType.Income,
+            Description = "Lön Oktober"
+        });
+        _context.Transactions.Add(new Transaction 
+        { 
+            Amount = 35000m, 
+            Date = new DateTime(2025, 11, 25), 
+            CategoryId = 1, 
+            Type = TransactionType.Income,
+            Description = "Lön November"
+        });
+        _context.Transactions.Add(new Transaction 
+        { 
+            Amount = 15000m, 
+            Date = new DateTime(2025, 10, 5), 
+            CategoryId = 2, 
+            Type = TransactionType.Expense,
+            Description = "Utgifter Oktober"
+        });
+        _context.SaveChanges();
+
+        // Create a fresh ViewModel
+        var transactionService = new TransactionService(_context);
+        var calculationService = new CalculationService(_context);
+        var viewModel = new OverviewViewModel(transactionService, calculationService);
+
+        var initialBalance = viewModel.AccountBalance;
+
+        // Act - Change selected month
+        viewModel.SelectedMonth = new DateTime(2025, 10, 1);
+
+        // Assert - Account balance should remain the same
+        Assert.Equal(initialBalance, viewModel.AccountBalance);
+        Assert.Equal(55000m, viewModel.AccountBalance); // 70000 - 15000
     }
 
     public void Dispose()

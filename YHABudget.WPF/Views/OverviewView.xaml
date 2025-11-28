@@ -10,8 +10,27 @@
              Background="{StaticResource BackgroundLightBrush}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="30">
-            <TextBlock Text="Månadsprognos"
+            <TextBlock Text="Översikt"
                        Style="{StaticResource SectionHeaderStyle}"/>
+
+            <!-- Account Balance - Standalone -->
+            <Border Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource PrimaryBrush}"
+                    BorderThickness="2"
+                    CornerRadius="4"
+                    Padding="20"
+                    Margin="0,0,0,30">
+                <Grid>
+                    <TextBlock Text="Kontosaldo"
+                               FontSize="22"
+                               FontWeight="Bold"/>
+                    <TextBlock Text="{Binding AccountBalance, StringFormat='{}{0:N0} kr'}"
+                               HorizontalAlignment="Right"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource PrimaryBrush}"/>
+                </Grid>
+            </Border>
 
             <!-- Month Selector -->
             <StackPanel Orientation="Horizontal"
@@ -21,7 +40,12 @@
                            Margin="0,0,10,0"
                            FontSize="14"/>
                 <ComboBox Width="200"
-                          Height="30"/>
+                          Height="30"
+                          ItemsSource="{Binding AvailableMonths}"
+                          SelectedValue="{Binding SelectedMonth}"
+                          SelectedValuePath="Date"
+                          DisplayMemberPath="DisplayName"
+                          VerticalContentAlignment="Center"/>
             </StackPanel>
 
             <!-- Summary Card -->
@@ -118,12 +142,12 @@
                             CornerRadius="4"
                             Padding="15">
                         <Grid>
-                            <TextBlock Text="Netto"
-                                       FontSize="20"
+                            <TextBlock Text="Netto denna månad"
+                                       FontSize="18"
                                        FontWeight="Bold"/>
                             <TextBlock Text="{Binding NetBalance, StringFormat='{}{0:N0} kr'}"
                                        HorizontalAlignment="Right"
-                                       FontSize="24"
+                                       FontSize="22"
                                        FontWeight="Bold"
                                        Foreground="{StaticResource PrimaryBrush}"/>
                         </Grid>

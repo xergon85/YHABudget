@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows.Input;
 using YHABudget.Core.Commands;
 using YHABudget.Core.DTOs;
@@ -7,6 +8,12 @@ using YHABudget.Data.Enums;
 using YHABudget.Data.Services;
 
 namespace YHABudget.Core.ViewModels;
+
+public class MonthDisplay
+{
+    public DateTime Date { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+}
 
 public class OverviewViewModel : ViewModelBase
 {
@@ -17,8 +24,10 @@ public class OverviewViewModel : ViewModelBase
     private decimal _totalIncome;
     private decimal _totalExpenses;
     private decimal _netBalance;
+    private decimal _accountBalance;
     private ObservableCollection<CategorySummary> _incomeByCategory;
     private ObservableCollection<CategorySummary> _expensesByCategory;
+    private ObservableCollection<MonthDisplay> _availableMonths;
 
     public OverviewViewModel(ITransactionService transactionService, ICalculationService calculationService)
     {
@@ -28,11 +37,14 @@ public class OverviewViewModel : ViewModelBase
         _selectedMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         _incomeByCategory = new ObservableCollection<CategorySummary>();
         _expensesByCategory = new ObservableCollection<CategorySummary>();
+        _availableMonths = new ObservableCollection<MonthDisplay>();
         
-        LoadDataCommand = new RelayCommand(async () => await LoadData());
+        LoadDataCommand = new RelayCommand(() => LoadData());
         
-        // Load data initially
-        _ = LoadData();
+        // Populate available months and load data
+        PopulateAvailableMonths();
+        CalculateAccountBalance();
+        LoadData();
     }
 
     public DateTime SelectedMonth
@@ -42,7 +54,7 @@ public class OverviewViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedMonth, value))
             {
-                _ = LoadData();
+                LoadData();
             }
         }
     }
@@ -65,6 +77,12 @@ public class OverviewViewModel : ViewModelBase
         private set => SetProperty(ref _netBalance, value);
     }
 
+    public decimal AccountBalance
+    {
+        get => _accountBalance;
+        private set => SetProperty(ref _accountBalance, value);
+    }
+
     public ObservableCollection<CategorySummary> IncomeByCategory
     {
         get => _incomeByCategory;
@@ -77,9 +95,15 @@ public class OverviewViewModel : ViewModelBase
         private set => SetProperty(ref _expensesByCategory, value);
     }
 
+    public ObservableCollection<MonthDisplay> AvailableMonths
+    {
+        get => _availableMonths;
+        private set => SetProperty(ref _availableMonths, value);
+    }
+
     public ICommand LoadDataCommand { get; }
 
-    private Task LoadData()
+    private void LoadData()
     {
         // Get all transactions for the selected month
         var transactions = _transactionService.GetTransactionsByMonth(SelectedMonth);
@@ -116,7 +140,72 @@ public class OverviewViewModel : ViewModelBase
         
         // Calculate net balance
         NetBalance = TotalIncome - TotalExpenses;
+    }
+
+    private void CalculateAccountBalance()
+    {
+        // Calculate account balance (all transactions, current balance)
+        var allTransactions = _transactionService.GetAllTransactions();
         
-        return Task.CompletedTask;
+        var totalIncome = allTransactions
+            .Where(t => t.Type == TransactionType.Income)
+            .Sum(t => t.Amount);
+        
+        var totalExpenses = allTransactions
+            .Where(t => t.Type == TransactionType.Expense)
+            .Sum(t => t.Amount);
+        
+        AccountBalance = totalIncome - totalExpenses;
+    }
+
+    private void PopulateAvailableMonths()
+    {
+        // Get all transactions
+        var allTransactions = _transactionService.GetAllTransactions();
+        
+        if (!allTransactions.Any())
+        {
+            // If no transactions, add current month
+            var currentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            AvailableMonths.Add(new MonthDisplay
+            {
+                Date = currentMonth,
+                DisplayName = FormatMonthYear(currentMonth)
+            });
+            return;
+        }
+        
+        // Get distinct months from transactions
+        var distinctMonths = allTransactions
+            .Select(t => new DateTime(t.Date.Year, t.Date.Month, 1))
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToList();
+        
+        // Add to collection
+        AvailableMonths.Clear();
+        foreach (var month in distinctMonths)
+        {
+            AvailableMonths.Add(new MonthDisplay
+            {
+                Date = month,
+                DisplayName = FormatMonthYear(month)
+            });
+        }
+    }
+
+    private string FormatMonthYear(DateTime date)
+    {
+        // Format as "November 2025" with Swedish culture
+        var culture = new CultureInfo("sv-SE");
+        var formatted = date.ToString("MMMM yyyy", culture);
+        
+        // Capitalize first letter
+        if (!string.IsNullOrEmpty(formatted))
+        {
+            formatted = char.ToUpper(formatted[0]) + formatted.Substring(1);
+        }
+        
+        return formatted;
     }
 }
