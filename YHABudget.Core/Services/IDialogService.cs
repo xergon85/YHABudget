@@ -1,0 +1,8 @@
+using YHABudget.Data.Models;
+
+namespace YHABudget.Core.Services;
+
+public interface IDialogService
+{
+    bool? ShowTransactionDialog(Transaction? transaction = null);
+}
