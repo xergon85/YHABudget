@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using YHABudget.Core.Commands;
 using YHABudget.Core.MVVM;
+using YHABudget.Core.Services;
 using YHABudget.Data.Enums;
 using YHABudget.Data.Models;
 using YHABudget.Data.Services;
@@ -12,27 +13,32 @@ public class TransactionViewModel : ViewModelBase
 {
     private readonly ITransactionService _transactionService;
     private readonly ICategoryService _categoryService;
-    
+    private readonly IDialogService _dialogService;
+
     private ObservableCollection<Transaction> _transactions;
     private ObservableCollection<Category> _categories;
     private TransactionType? _selectedTypeFilter;
     private int? _selectedCategoryFilter;
     private DateTime? _selectedMonthFilter;
     private decimal _totalAmount;
+    private Transaction? _selectedTransaction;
 
-    public TransactionViewModel(ITransactionService transactionService, ICategoryService categoryService)
+    public TransactionViewModel(ITransactionService transactionService, ICategoryService categoryService, IDialogService dialogService)
     {
         _transactionService = transactionService;
         _categoryService = categoryService;
-        
+        _dialogService = dialogService;
+
         _transactions = new ObservableCollection<Transaction>();
         _categories = new ObservableCollection<Category>();
-        
-        LoadDataCommand = new RelayCommand(async () => await LoadData());
+
+        LoadDataCommand = new RelayCommand(() => LoadData());
         ClearFiltersCommand = new RelayCommand(() => ClearFilters());
-        DeleteTransactionCommand = new RelayCommand<int>(async (id) => await DeleteTransaction(id));
-        
-        _ = LoadData();
+        DeleteTransactionCommand = new RelayCommand<int>((id) => DeleteTransaction(id));
+        AddTransactionCommand = new RelayCommand(() => AddTransaction());
+        EditTransactionCommand = new RelayCommand(() => EditTransaction(), () => SelectedTransaction != null);
+
+        LoadData();
     }
 
     public ObservableCollection<Transaction> Transactions
@@ -54,7 +60,7 @@ public class TransactionViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedTypeFilter, value))
             {
-                _ = LoadData();
+                LoadData();
             }
         }
     }
@@ -66,7 +72,7 @@ public class TransactionViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedCategoryFilter, value))
             {
-                _ = LoadData();
+                LoadData();
             }
         }
     }
@@ -78,7 +84,7 @@ public class TransactionViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedMonthFilter, value))
             {
-                _ = LoadData();
+                LoadData();
             }
         }
     }
@@ -89,31 +95,43 @@ public class TransactionViewModel : ViewModelBase
         private set => SetProperty(ref _totalAmount, value);
     }
 
+    public Transaction? SelectedTransaction
+    {
+        get => _selectedTransaction;
+        set
+        {
+            if (SetProperty(ref _selectedTransaction, value))
+            {
+                OnPropertyChanged(nameof(EditTransactionCommand));
+            }
+        }
+    }
+
     public ICommand LoadDataCommand { get; }
     public ICommand ClearFiltersCommand { get; }
     public ICommand DeleteTransactionCommand { get; }
+    public ICommand AddTransactionCommand { get; }
+    public ICommand EditTransactionCommand { get; }
 
-    private Task LoadData()
+    private void LoadData()
     {
         // Load categories
         var categories = _categoryService.GetAllCategories();
         Categories = new ObservableCollection<Category>(categories);
-        
+
         // Load transactions based on filters
         var transactions = _transactionService.GetTransactionsByFilter(
             SelectedTypeFilter,
             SelectedCategoryFilter,
             SelectedMonthFilter
         );
-        
+
         Transactions = new ObservableCollection<Transaction>(transactions);
-        
+
         // Calculate total (income positive, expense negative for display)
-        TotalAmount = Transactions.Sum(t => 
+        TotalAmount = Transactions.Sum(t =>
             t.Type == TransactionType.Income ? t.Amount : -t.Amount
         );
-        
-        return Task.CompletedTask;
     }
 
     private void ClearFilters()
@@ -123,9 +141,30 @@ public class TransactionViewModel : ViewModelBase
         SelectedMonthFilter = null;
     }
 
-    private async Task DeleteTransaction(int transactionId)
+    private void DeleteTransaction(int transactionId)
     {
         _transactionService.DeleteTransaction(transactionId);
-        await LoadData();
+        LoadData();
+    }
+
+    private void AddTransaction()
+    {
+        var result = _dialogService.ShowTransactionDialog();
+        if (result == true)
+        {
+            LoadData();
+        }
+    }
+
+    private void EditTransaction()
+    {
+        if (SelectedTransaction == null)
+            return;
+
+        var result = _dialogService.ShowTransactionDialog(SelectedTransaction);
+        if (result == true)
+        {
+            LoadData();
+        }
     }
 }

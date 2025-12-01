@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using YHABudget.Core.Services;
 using YHABudget.Core.ViewModels;
 using YHABudget.Data.Context;
 using YHABudget.Data.Services;
+using YHABudget.WPF.Services;
 
 namespace YHABudget.WPF;
 
@@ -26,6 +28,7 @@ public partial class App : Application
                 services.AddScoped<ICategoryService, CategoryService>();
                 services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
                 services.AddScoped<ICalculationService, CalculationService>();
+                services.AddScoped<IDialogService, DialogService>();
 
                 // Register ViewModels
                 services.AddTransient<MainViewModel>();

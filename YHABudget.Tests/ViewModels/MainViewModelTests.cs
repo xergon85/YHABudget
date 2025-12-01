@@ -1,7 +1,10 @@
+using YHABudget.Core.Services;
 using YHABudget.Core.ViewModels;
 using YHABudget.Data.Context;
+using YHABudget.Data.Models;
 using YHABudget.Data.Services;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace YHABudget.Tests.ViewModels;
 
@@ -11,6 +14,7 @@ public class MainViewModelTests : IDisposable
     private readonly ITransactionService _transactionService;
     private readonly ICategoryService _categoryService;
     private readonly ICalculationService _calculationService;
+    private readonly Mock<IDialogService> _mockDialogService;
 
     public MainViewModelTests()
     {
@@ -22,13 +26,14 @@ public class MainViewModelTests : IDisposable
         _transactionService = new TransactionService(_context);
         _categoryService = new CategoryService(_context);
         _calculationService = new CalculationService(_context);
+        _mockDialogService = new Mock<IDialogService>();
     }
 
     [Fact]
     public void Constructor_InitializesWithOverviewAsCurrentViewModel()
     {
         // Arrange & Act
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
 
         // Assert
         Assert.NotNull(mainViewModel.CurrentViewModel);
@@ -39,7 +44,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToOverviewCommand_ChangesCurrentViewModelToOverview()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
         mainViewModel.CurrentViewModel = null; // Set to null to test navigation
 
         // Act
@@ -54,7 +59,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToTransactionsCommand_ChangesCurrentViewModelToTransactions()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
 
         // Act
         mainViewModel.NavigateToTransactionsCommand.Execute(null);
@@ -68,7 +73,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToRecurringCommand_ChangesCurrentViewModelToRecurring()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
 
         // Act
         mainViewModel.NavigateToRecurringCommand.Execute(null);
@@ -82,7 +87,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToSettingsCommand_ChangesCurrentViewModelToSettings()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
 
         // Act
         mainViewModel.NavigateToSettingsCommand.Execute(null);
@@ -96,7 +101,7 @@ public class MainViewModelTests : IDisposable
     public void CurrentViewModel_WhenChanged_RaisesPropertyChangedEvent()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
         bool propertyChangedRaised = false;
         mainViewModel.PropertyChanged += (sender, args) =>
         {

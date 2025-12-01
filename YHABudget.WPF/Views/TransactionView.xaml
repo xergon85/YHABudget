@@ -65,6 +65,7 @@
                 <Button Grid.Row="0"
                         Content="+ Ny transaktion"
                         Style="{StaticResource PrimaryButtonStyle}"
+                        Command="{Binding AddTransactionCommand}"
                         HorizontalAlignment="Left"
                         Margin="0,0,0,15"/>
 
@@ -72,6 +73,7 @@
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <DataGrid ItemsSource="{Binding Transactions}"
+                              SelectedItem="{Binding SelectedTransaction}"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False"
                               CanUserDeleteRows="False"
@@ -84,7 +86,8 @@
                               RowHeight="45"
                               HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Disabled"
-                              EnableRowVirtualization="False">
+                              EnableRowVirtualization="False"
+                              MouseDoubleClick="DataGrid_MouseDoubleClick">
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="Background"
