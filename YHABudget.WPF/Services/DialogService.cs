@@ -11,11 +11,16 @@ public class DialogService : IDialogService
 {
     private readonly ICategoryService _categoryService;
     private readonly ITransactionService _transactionService;
+    private readonly IRecurringTransactionService _recurringTransactionService;
 
-    public DialogService(ICategoryService categoryService, ITransactionService transactionService)
+    public DialogService(
+        ICategoryService categoryService, 
+        ITransactionService transactionService,
+        IRecurringTransactionService recurringTransactionService)
     {
         _categoryService = categoryService;
         _transactionService = transactionService;
+        _recurringTransactionService = recurringTransactionService;
     }
 
     public bool? ShowTransactionDialog(Transaction? transaction = null)
@@ -28,6 +33,24 @@ public class DialogService : IDialogService
         }
 
         var dialog = new TransactionDialog
+        {
+            DataContext = viewModel,
+            Owner = Application.Current.MainWindow
+        };
+
+        return dialog.ShowDialog();
+    }
+
+    public bool? ShowRecurringTransactionDialog(RecurringTransaction? recurringTransaction = null)
+    {
+        var viewModel = new RecurringTransactionDialogViewModel(_categoryService, _recurringTransactionService);
+
+        if (recurringTransaction != null)
+        {
+            viewModel.LoadRecurringTransaction(recurringTransaction);
+        }
+
+        var dialog = new RecurringTransactionDialog
         {
             DataContext = viewModel,
             Owner = Application.Current.MainWindow
