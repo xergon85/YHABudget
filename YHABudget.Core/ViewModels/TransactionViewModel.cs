@@ -115,18 +115,59 @@ public class TransactionViewModel : ViewModelBase
 
     private void LoadData()
     {
-        // Load categories
-        var categories = _categoryService.GetAllCategories();
-        Categories = new ObservableCollection<Category>(categories);
+        // Load categories (only once)
+        if (Categories.Count == 0)
+        {
+            var categories = _categoryService.GetAllCategories();
+            foreach (var category in categories)
+            {
+                Categories.Add(category);
+            }
+        }
 
         // Load transactions based on filters
-        var transactions = _transactionService.GetTransactionsByFilter(
+        var newTransactions = _transactionService.GetTransactionsByFilter(
             SelectedTypeFilter,
             SelectedCategoryFilter,
             SelectedMonthFilter
-        );
+        ).ToList();
 
-        Transactions = new ObservableCollection<Transaction>(transactions);
+        // Update existing collection efficiently
+        // Remove transactions that are no longer in the new list
+        for (int i = Transactions.Count - 1; i >= 0; i--)
+        {
+            if (!newTransactions.Any(t => t.Id == Transactions[i].Id))
+            {
+                Transactions.RemoveAt(i);
+            }
+        }
+
+        // Add or update transactions
+        foreach (var transaction in newTransactions)
+        {
+            var existing = Transactions.FirstOrDefault(t => t.Id == transaction.Id);
+            if (existing == null)
+            {
+                // Add new transaction in the right position (by date, descending)
+                int insertIndex = 0;
+                for (int i = 0; i < Transactions.Count; i++)
+                {
+                    if (transaction.Date > Transactions[i].Date)
+                    {
+                        insertIndex = i;
+                        break;
+                    }
+                    insertIndex = i + 1;
+                }
+                Transactions.Insert(insertIndex, transaction);
+            }
+            else if (!existing.Equals(transaction))
+            {
+                // Update existing transaction properties
+                int index = Transactions.IndexOf(existing);
+                Transactions[index] = transaction;
+            }
+        }
 
         // Calculate total (income positive, expense negative for display)
         TotalAmount = Transactions.Sum(t =>
