@@ -11,6 +11,7 @@ public class MainViewModel : ViewModelBase
     private readonly ITransactionService _transactionService;
     private readonly ICategoryService _categoryService;
     private readonly ICalculationService _calculationService;
+    private readonly IRecurringTransactionService _recurringTransactionService;
     private readonly IDialogService _dialogService;
     private ViewModelBase? _currentViewModel;
     
@@ -23,11 +24,13 @@ public class MainViewModel : ViewModelBase
         ITransactionService transactionService, 
         ICategoryService categoryService,
         ICalculationService calculationService,
+        IRecurringTransactionService recurringTransactionService,
         IDialogService dialogService)
     {
         _transactionService = transactionService;
         _categoryService = categoryService;
         _calculationService = calculationService;
+        _recurringTransactionService = recurringTransactionService;
         _dialogService = dialogService;
         
         NavigateToOverviewCommand = new RelayCommand(() => CurrentViewModel = GetOverviewViewModel());
@@ -60,7 +63,7 @@ public class MainViewModel : ViewModelBase
     
     private RecurringTransactionViewModel GetRecurringTransactionViewModel()
     {
-        return _recurringTransactionViewModel ??= new RecurringTransactionViewModel();
+        return _recurringTransactionViewModel ??= new RecurringTransactionViewModel(_recurringTransactionService, _dialogService);
     }
     
     private SettingsViewModel GetSettingsViewModel()
