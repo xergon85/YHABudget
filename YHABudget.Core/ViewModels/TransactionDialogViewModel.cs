@@ -14,7 +14,7 @@ public class TransactionDialogViewModel : ViewModelBase
     private readonly ITransactionService _transactionService;
 
     private int? _transactionId;
-    private decimal _amount;
+    private decimal? _amount;
     private string _description = string.Empty;
     private DateTime _date = DateTime.Now;
     private int? _selectedCategoryId;
@@ -40,7 +40,7 @@ public class TransactionDialogViewModel : ViewModelBase
         set => SetProperty(ref _transactionId, value);
     }
 
-    public decimal Amount
+    public decimal? Amount
     {
         get => _amount;
         set
@@ -159,7 +159,7 @@ public class TransactionDialogViewModel : ViewModelBase
 
     private void ValidateAmount()
     {
-        if (Amount <= 0)
+        if (!Amount.HasValue || Amount.Value <= 0)
         {
             ErrorMessage = "Belopp måste vara större än 0";
         }
@@ -195,7 +195,8 @@ public class TransactionDialogViewModel : ViewModelBase
 
     private bool CanSave()
     {
-        return Amount > 0
+        return Amount.HasValue
+            && Amount.Value > 0
             && !string.IsNullOrWhiteSpace(Description)
             && SelectedCategoryId.HasValue
             && string.IsNullOrEmpty(ErrorMessage);
@@ -215,7 +216,7 @@ public class TransactionDialogViewModel : ViewModelBase
                 var transaction = _transactionService.GetTransactionById(TransactionId.Value);
                 if (transaction != null)
                 {
-                    transaction.Amount = Amount;
+                    transaction.Amount = Amount!.Value;
                     transaction.Description = Description;
                     transaction.Date = Date;
                     transaction.CategoryId = SelectedCategoryId!.Value;
@@ -228,7 +229,7 @@ public class TransactionDialogViewModel : ViewModelBase
             {
                 var transaction = new Transaction
                 {
-                    Amount = Amount,
+                    Amount = Amount!.Value,
                     Description = Description,
                     Date = Date,
                     CategoryId = SelectedCategoryId!.Value,
