@@ -18,6 +18,7 @@ public class MonthDisplay
 public class OverviewViewModel : ViewModelBase
 {
     private readonly ITransactionService _transactionService;
+    private readonly IRecurringTransactionService _recurringTransactionService;
     private readonly ICalculationService _calculationService;
     
     private DateTime _selectedMonth;
@@ -29,9 +30,10 @@ public class OverviewViewModel : ViewModelBase
     private ObservableCollection<CategorySummary> _expensesByCategory;
     private ObservableCollection<MonthDisplay> _availableMonths;
 
-    public OverviewViewModel(ITransactionService transactionService, ICalculationService calculationService)
+    public OverviewViewModel(ITransactionService transactionService, IRecurringTransactionService recurringTransactionService, ICalculationService calculationService)
     {
         _transactionService = transactionService;
+        _recurringTransactionService = recurringTransactionService;
         _calculationService = calculationService;
         
         _selectedMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -105,6 +107,9 @@ public class OverviewViewModel : ViewModelBase
 
     private void LoadData()
     {
+        // Process recurring transactions for this month (idempotent - won't create duplicates)
+        _recurringTransactionService.ProcessRecurringTransactionsForMonth(SelectedMonth);
+        
         // Get all transactions for the selected month
         var transactions = _transactionService.GetTransactionsByMonth(SelectedMonth);
         
@@ -120,7 +125,12 @@ public class OverviewViewModel : ViewModelBase
             .OrderByDescending(x => x.Total)
             .ToList();
         
-        IncomeByCategory = new ObservableCollection<CategorySummary>(incomeGroups);
+        // Update collection efficiently
+        IncomeByCategory.Clear();
+        foreach (var item in incomeGroups)
+        {
+            IncomeByCategory.Add(item);
+        }
         TotalIncome = incomeGroups.Sum(x => x.Total);
         
         // Calculate expenses by category
@@ -135,7 +145,12 @@ public class OverviewViewModel : ViewModelBase
             .OrderByDescending(x => x.Total)
             .ToList();
         
-        ExpensesByCategory = new ObservableCollection<CategorySummary>(expenseGroups);
+        // Update collection efficiently
+        ExpensesByCategory.Clear();
+        foreach (var item in expenseGroups)
+        {
+            ExpensesByCategory.Add(item);
+        }
         TotalExpenses = expenseGroups.Sum(x => x.Total);
         
         // Calculate net balance

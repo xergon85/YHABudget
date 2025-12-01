@@ -53,12 +53,12 @@ public class MainViewModel : ViewModelBase
     
     private OverviewViewModel GetOverviewViewModel()
     {
-        return _overviewViewModel ??= new OverviewViewModel(_transactionService, _calculationService);
+        return _overviewViewModel ??= new OverviewViewModel(_transactionService, _recurringTransactionService, _calculationService);
     }
     
     private TransactionViewModel GetTransactionViewModel()
     {
-        return _transactionViewModel ??= new TransactionViewModel(_transactionService, _categoryService, _dialogService);
+        return _transactionViewModel ??= new TransactionViewModel(_transactionService, _categoryService, _recurringTransactionService, _dialogService);
     }
     
     private RecurringTransactionViewModel GetRecurringTransactionViewModel()

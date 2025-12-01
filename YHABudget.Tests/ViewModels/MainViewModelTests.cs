@@ -14,6 +14,7 @@ public class MainViewModelTests : IDisposable
     private readonly ITransactionService _transactionService;
     private readonly ICategoryService _categoryService;
     private readonly ICalculationService _calculationService;
+    private readonly IRecurringTransactionService _recurringTransactionService;
     private readonly Mock<IDialogService> _mockDialogService;
 
     public MainViewModelTests()
@@ -26,6 +27,7 @@ public class MainViewModelTests : IDisposable
         _transactionService = new TransactionService(_context);
         _categoryService = new CategoryService(_context);
         _calculationService = new CalculationService(_context);
+        _recurringTransactionService = new RecurringTransactionService(_context);
         _mockDialogService = new Mock<IDialogService>();
     }
 
@@ -33,7 +35,7 @@ public class MainViewModelTests : IDisposable
     public void Constructor_InitializesWithOverviewAsCurrentViewModel()
     {
         // Arrange & Act
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _recurringTransactionService, _mockDialogService.Object);
 
         // Assert
         Assert.NotNull(mainViewModel.CurrentViewModel);
@@ -44,7 +46,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToOverviewCommand_ChangesCurrentViewModelToOverview()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _recurringTransactionService, _mockDialogService.Object);
         mainViewModel.CurrentViewModel = null; // Set to null to test navigation
 
         // Act
@@ -56,10 +58,10 @@ public class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void NavigateToTransactionsCommand_ChangesCurrentViewModelToTransactions()
+    public void NavigateToRecurringTransactionsCommand_ChangesCurrentViewModelToRecurringTransactions()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _recurringTransactionService, _mockDialogService.Object);
 
         // Act
         mainViewModel.NavigateToTransactionsCommand.Execute(null);
@@ -73,7 +75,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToRecurringCommand_ChangesCurrentViewModelToRecurring()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _recurringTransactionService, _mockDialogService.Object);
 
         // Act
         mainViewModel.NavigateToRecurringCommand.Execute(null);
@@ -87,7 +89,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToSettingsCommand_ChangesCurrentViewModelToSettings()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _recurringTransactionService, _mockDialogService.Object);
 
         // Act
         mainViewModel.NavigateToSettingsCommand.Execute(null);
@@ -101,7 +103,7 @@ public class MainViewModelTests : IDisposable
     public void CurrentViewModel_WhenChanged_RaisesPropertyChangedEvent()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _mockDialogService.Object);
+        var mainViewModel = new MainViewModel(_transactionService, _categoryService, _calculationService, _recurringTransactionService, _mockDialogService.Object);
         bool propertyChangedRaised = false;
         mainViewModel.PropertyChanged += (sender, args) =>
         {
@@ -110,7 +112,7 @@ public class MainViewModelTests : IDisposable
         };
 
         // Act
-        mainViewModel.CurrentViewModel = new OverviewViewModel(_transactionService, _calculationService);
+        mainViewModel.CurrentViewModel = new OverviewViewModel(_transactionService, _recurringTransactionService, _calculationService);
 
         // Assert
         Assert.True(propertyChangedRaised);

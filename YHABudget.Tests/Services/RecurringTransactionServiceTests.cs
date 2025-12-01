@@ -223,4 +223,230 @@ public class RecurringTransactionServiceTests : IDisposable
         // Assert
         Assert.Null(result);
     }
+
+    [Fact]
+    public void ProcessRecurringTransactionsForMonth_MonthlyRecurrence_CreatesTransaction()
+    {
+        // Arrange
+        var category = new Category { Name = "Lön", Type = TransactionType.Income };
+        _context.Categories.Add(category);
+        _context.SaveChanges();
+
+        var recurring = new RecurringTransaction
+        {
+            Description = "Månadslön",
+            Amount = 35000m,
+            CategoryId = category.Id,
+            Type = TransactionType.Income,
+            RecurrenceType = RecurrenceType.Monthly,
+            StartDate = new DateTime(2025, 1, 25),
+            IsActive = true
+        };
+        _service.AddRecurringTransaction(recurring);
+
+        var targetMonth = new DateTime(2025, 11, 1);
+
+        // Act
+        _service.ProcessRecurringTransactionsForMonth(targetMonth);
+
+        // Assert
+        var transactions = _context.Transactions
+            .Where(t => t.Date >= targetMonth && t.Date < targetMonth.AddMonths(1))
+            .ToList();
+
+        Assert.Single(transactions);
+        var transaction = transactions.First();
+        Assert.Equal("Månadslön", transaction.Description);
+        Assert.Equal(35000m, transaction.Amount);
+        Assert.Equal(TransactionType.Income, transaction.Type);
+        Assert.Equal(new DateTime(2025, 11, 25), transaction.Date);
+        Assert.True(transaction.IsRecurring);
+    }
+
+    [Fact]
+    public void ProcessRecurringTransactionsForMonth_YearlyRecurrence_CreatesTransactionInCorrectMonth()
+    {
+        // Arrange
+        var category = new Category { Name = "Bilförsäkring", Type = TransactionType.Expense };
+        _context.Categories.Add(category);
+        _context.SaveChanges();
+
+        var recurring = new RecurringTransaction
+        {
+            Description = "Årlig bilförsäkring",
+            Amount = 8900m,
+            CategoryId = category.Id,
+            Type = TransactionType.Expense,
+            RecurrenceType = RecurrenceType.Yearly,
+            RecurrenceMonth = 6, // June
+            StartDate = new DateTime(2024, 6, 15),
+            IsActive = true
+        };
+        _service.AddRecurringTransaction(recurring);
+
+        var targetMonth = new DateTime(2025, 6, 1);
+
+        // Act
+        _service.ProcessRecurringTransactionsForMonth(targetMonth);
+
+        // Assert
+        var transactions = _context.Transactions
+            .Where(t => t.Date >= targetMonth && t.Date < targetMonth.AddMonths(1))
+            .ToList();
+
+        Assert.Single(transactions);
+        var transaction = transactions.First();
+        Assert.Equal("Årlig bilförsäkring", transaction.Description);
+        Assert.Equal(8900m, transaction.Amount);
+        Assert.Equal(TransactionType.Expense, transaction.Type);
+        Assert.Equal(new DateTime(2025, 6, 15), transaction.Date);
+        Assert.True(transaction.IsRecurring);
+    }
+
+    [Fact]
+    public void ProcessRecurringTransactionsForMonth_YearlyRecurrence_DoesNotCreateInWrongMonth()
+    {
+        // Arrange
+        var category = new Category { Name = "Bilförsäkring", Type = TransactionType.Expense };
+        _context.Categories.Add(category);
+        _context.SaveChanges();
+
+        var recurring = new RecurringTransaction
+        {
+            Description = "Årlig bilförsäkring",
+            Amount = 8900m,
+            CategoryId = category.Id,
+            Type = TransactionType.Expense,
+            RecurrenceType = RecurrenceType.Yearly,
+            RecurrenceMonth = 6, // June
+            StartDate = new DateTime(2024, 6, 15),
+            IsActive = true
+        };
+        _service.AddRecurringTransaction(recurring);
+
+        var targetMonth = new DateTime(2025, 11, 1); // November - should not create
+
+        // Act
+        _service.ProcessRecurringTransactionsForMonth(targetMonth);
+
+        // Assert
+        var transactions = _context.Transactions
+            .Where(t => t.Date >= targetMonth && t.Date < targetMonth.AddMonths(1))
+            .ToList();
+
+        Assert.Empty(transactions);
+    }
+
+    [Fact]
+    public void ProcessRecurringTransactionsForMonth_InactiveRecurring_DoesNotCreateTransaction()
+    {
+        // Arrange
+        var category = new Category { Name = "Lön", Type = TransactionType.Income };
+        _context.Categories.Add(category);
+        _context.SaveChanges();
+
+        var recurring = new RecurringTransaction
+        {
+            Description = "Inaktiv lön",
+            Amount = 35000m,
+            CategoryId = category.Id,
+            Type = TransactionType.Income,
+            RecurrenceType = RecurrenceType.Monthly,
+            StartDate = new DateTime(2025, 1, 25),
+            IsActive = false // Inactive
+        };
+        _service.AddRecurringTransaction(recurring);
+
+        var targetMonth = new DateTime(2025, 11, 1);
+
+        // Act
+        _service.ProcessRecurringTransactionsForMonth(targetMonth);
+
+        // Assert
+        var transactions = _context.Transactions
+            .Where(t => t.Date >= targetMonth && t.Date < targetMonth.AddMonths(1))
+            .ToList();
+
+        Assert.Empty(transactions);
+    }
+
+    [Fact]
+    public void ProcessRecurringTransactionsForMonth_CalledTwice_DoesNotCreateDuplicates()
+    {
+        // Arrange
+        var category = new Category { Name = "Lön", Type = TransactionType.Income };
+        _context.Categories.Add(category);
+        _context.SaveChanges();
+
+        var recurring = new RecurringTransaction
+        {
+            Description = "Månadslön",
+            Amount = 35000m,
+            CategoryId = category.Id,
+            Type = TransactionType.Income,
+            RecurrenceType = RecurrenceType.Monthly,
+            StartDate = new DateTime(2025, 1, 25),
+            IsActive = true
+        };
+        _service.AddRecurringTransaction(recurring);
+
+        var targetMonth = new DateTime(2025, 11, 1);
+
+        // Act
+        _service.ProcessRecurringTransactionsForMonth(targetMonth);
+        _service.ProcessRecurringTransactionsForMonth(targetMonth); // Call twice
+
+        // Assert
+        var transactions = _context.Transactions
+            .Where(t => t.Date >= targetMonth && t.Date < targetMonth.AddMonths(1))
+            .ToList();
+
+        Assert.Single(transactions); // Should only have one transaction
+    }
+
+    [Fact]
+    public void ProcessRecurringTransactionsForMonth_MultipleRecurring_CreatesAllApplicable()
+    {
+        // Arrange
+        var incomeCategory = new Category { Name = "Lön", Type = TransactionType.Income };
+        var expenseCategory = new Category { Name = "Hyra", Type = TransactionType.Expense };
+        _context.Categories.AddRange(incomeCategory, expenseCategory);
+        _context.SaveChanges();
+
+        _service.AddRecurringTransaction(new RecurringTransaction
+        {
+            Description = "Månadslön",
+            Amount = 35000m,
+            CategoryId = incomeCategory.Id,
+            Type = TransactionType.Income,
+            RecurrenceType = RecurrenceType.Monthly,
+            StartDate = new DateTime(2025, 1, 25),
+            IsActive = true
+        });
+
+        _service.AddRecurringTransaction(new RecurringTransaction
+        {
+            Description = "Hyra",
+            Amount = 8500m,
+            CategoryId = expenseCategory.Id,
+            Type = TransactionType.Expense,
+            RecurrenceType = RecurrenceType.Monthly,
+            StartDate = new DateTime(2025, 1, 1),
+            IsActive = true
+        });
+
+        var targetMonth = new DateTime(2025, 11, 1);
+
+        // Act
+        _service.ProcessRecurringTransactionsForMonth(targetMonth);
+
+        // Assert
+        var transactions = _context.Transactions
+            .Where(t => t.Date >= targetMonth && t.Date < targetMonth.AddMonths(1))
+            .ToList();
+
+        Assert.Equal(2, transactions.Count);
+        Assert.Contains(transactions, t => t.Description == "Månadslön" && t.Type == TransactionType.Income);
+        Assert.Contains(transactions, t => t.Description == "Hyra" && t.Type == TransactionType.Expense);
+    }
 }

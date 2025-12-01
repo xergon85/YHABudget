@@ -11,4 +11,5 @@ public interface IRecurringTransactionService
     void UpdateRecurringTransaction(RecurringTransaction transaction);
     void DeleteRecurringTransaction(int id);
     void ToggleActive(int id);
+    void ProcessRecurringTransactionsForMonth(DateTime month);
 }

@@ -22,9 +22,10 @@ public class OverviewViewModelTests : IDisposable
         _context = new BudgetDbContext(options);
         
         var transactionService = new TransactionService(_context);
+        var recurringTransactionService = new RecurringTransactionService(_context);
         var calculationService = new CalculationService(_context);
         
-        _viewModel = new OverviewViewModel(transactionService, calculationService);
+        _viewModel = new OverviewViewModel(transactionService, recurringTransactionService, calculationService);
     }
 
     [Fact]
@@ -277,12 +278,11 @@ public class OverviewViewModelTests : IDisposable
         });
         _context.SaveChanges();
 
-        // Create a fresh ViewModel to trigger CalculateAccountBalance
+        // Act - Create ViewModel which calculates account balance on initialization
         var transactionService = new TransactionService(_context);
+        var recurringTransactionService = new RecurringTransactionService(_context);
         var calculationService = new CalculationService(_context);
-        var viewModel = new OverviewViewModel(transactionService, calculationService);
-
-        // Act - Account balance should be calculated on initialization
+        var viewModel = new OverviewViewModel(transactionService, recurringTransactionService, calculationService);
 
         // Assert - Total income (70000) - Total expenses (27000) = 43000
         Assert.Equal(43000m, viewModel.AccountBalance);
@@ -324,8 +324,9 @@ public class OverviewViewModelTests : IDisposable
 
         // Create a fresh ViewModel
         var transactionService = new TransactionService(_context);
+        var recurringTransactionService = new RecurringTransactionService(_context);
         var calculationService = new CalculationService(_context);
-        var viewModel = new OverviewViewModel(transactionService, calculationService);
+        var viewModel = new OverviewViewModel(transactionService, recurringTransactionService, calculationService);
 
         var initialBalance = viewModel.AccountBalance;
 

@@ -13,6 +13,7 @@ public class TransactionViewModel : ViewModelBase
 {
     private readonly ITransactionService _transactionService;
     private readonly ICategoryService _categoryService;
+    private readonly IRecurringTransactionService _recurringTransactionService;
     private readonly IDialogService _dialogService;
 
     private ObservableCollection<Transaction> _transactions;
@@ -23,10 +24,11 @@ public class TransactionViewModel : ViewModelBase
     private decimal _totalAmount;
     private Transaction? _selectedTransaction;
 
-    public TransactionViewModel(ITransactionService transactionService, ICategoryService categoryService, IDialogService dialogService)
+    public TransactionViewModel(ITransactionService transactionService, ICategoryService categoryService, IRecurringTransactionService recurringTransactionService, IDialogService dialogService)
     {
         _transactionService = transactionService;
         _categoryService = categoryService;
+        _recurringTransactionService = recurringTransactionService;
         _dialogService = dialogService;
 
         _transactions = new ObservableCollection<Transaction>();
@@ -115,6 +117,10 @@ public class TransactionViewModel : ViewModelBase
 
     private void LoadData()
     {
+        // Process recurring transactions for the current month or filtered month
+        var monthToProcess = SelectedMonthFilter ?? DateTime.Now;
+        _recurringTransactionService.ProcessRecurringTransactionsForMonth(monthToProcess);
+        
         // Load categories (only once)
         if (Categories.Count == 0)
         {
