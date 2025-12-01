@@ -22,7 +22,7 @@ public class TransactionDialogViewModel : ViewModelBase
     private ObservableCollection<Category> _availableCategories;
     private string _errorMessage = string.Empty;
     private bool _isEditMode;
-    private bool _dialogResult;
+    private bool _saveSuccessful;
 
     public TransactionDialogViewModel(ICategoryService categoryService, ITransactionService transactionService)
     {
@@ -118,11 +118,13 @@ public class TransactionDialogViewModel : ViewModelBase
     public ICommand SaveCommand { get; }
     public ICommand CancelCommand { get; }
 
-    public bool DialogResult
+    public bool SaveSuccessful
     {
-        get => _dialogResult;
-        private set => SetProperty(ref _dialogResult, value);
+        get => _saveSuccessful;
+        private set => SetProperty(ref _saveSuccessful, value);
     }
+
+    public event EventHandler? RequestClose;
 
     public void LoadTransaction(Transaction transaction)
     {
@@ -237,17 +239,18 @@ public class TransactionDialogViewModel : ViewModelBase
                 _transactionService.AddTransaction(transaction);
             }
 
-            DialogResult = true;
+            SaveSuccessful = true;
+            RequestClose?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Fel vid sparande: {ex.Message}";
-            DialogResult = false;
         }
     }
 
     private void Cancel()
     {
-        DialogResult = false;
+        SaveSuccessful = false;
+        RequestClose?.Invoke(this, EventArgs.Empty);
     }
 }

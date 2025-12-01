@@ -237,6 +237,8 @@ public class TransactionDialogViewModelTests : IDisposable
         };
 
         var initialCount = _transactionService.GetAllTransactions().Count();
+        var requestCloseCalled = false;
+        viewModel.RequestClose += (s, e) => requestCloseCalled = true;
 
         // Act
         viewModel.SaveCommand.Execute(null);
@@ -244,7 +246,7 @@ public class TransactionDialogViewModelTests : IDisposable
         // Assert
         var transactions = _transactionService.GetAllTransactions();
         Assert.Equal(initialCount + 1, transactions.Count());
-        Assert.True(viewModel.DialogResult);
+        Assert.True(requestCloseCalled);
     }
 
     [Fact]
@@ -266,6 +268,9 @@ public class TransactionDialogViewModelTests : IDisposable
         viewModel.LoadTransaction(transaction);
         viewModel.Description = "Updated";
         viewModel.Amount = 200;
+        
+        var requestCloseCalled = false;
+        viewModel.RequestClose += (s, e) => requestCloseCalled = true;
 
         // Act
         viewModel.SaveCommand.Execute(null);
@@ -275,7 +280,96 @@ public class TransactionDialogViewModelTests : IDisposable
         Assert.NotNull(updated);
         Assert.Equal("Updated", updated.Description);
         Assert.Equal(200, updated.Amount);
-        Assert.True(viewModel.DialogResult);
+        Assert.True(requestCloseCalled);
+    }
+
+    [Fact]
+    public void CancelCommand_RaisesRequestCloseEvent()
+    {
+        // Arrange
+        var viewModel = new TransactionDialogViewModel(_categoryService, _transactionService);
+        var requestCloseCalled = false;
+        viewModel.RequestClose += (s, e) => requestCloseCalled = true;
+
+        // Act
+        viewModel.CancelCommand.Execute(null);
+
+        // Assert
+        Assert.True(requestCloseCalled);
+    }
+
+    [Fact]
+    public void CancelCommand_SetsSaveSuccessfulToFalse()
+    {
+        // Arrange
+        var viewModel = new TransactionDialogViewModel(_categoryService, _transactionService);
+
+        // Act
+        viewModel.CancelCommand.Execute(null);
+
+        // Assert
+        Assert.False(viewModel.SaveSuccessful);
+    }
+
+    [Fact]
+    public void SaveCommand_SetsSaveSuccessfulToTrue_OnSuccess()
+    {
+        // Arrange
+        var viewModel = new TransactionDialogViewModel(_categoryService, _transactionService)
+        {
+            Amount = 100,
+            Description = "Test",
+            SelectedCategoryId = 1,
+            TransactionType = TransactionType.Expense
+        };
+
+        // Act
+        viewModel.SaveCommand.Execute(null);
+
+        // Assert
+        Assert.True(viewModel.SaveSuccessful);
+    }
+
+    [Fact]
+    public void SaveCommand_RaisesRequestCloseEvent_OnSuccess()
+    {
+        // Arrange
+        var viewModel = new TransactionDialogViewModel(_categoryService, _transactionService)
+        {
+            Amount = 100,
+            Description = "Test",
+            SelectedCategoryId = 1,
+            TransactionType = TransactionType.Expense
+        };
+        var requestCloseCalled = false;
+        viewModel.RequestClose += (s, e) => requestCloseCalled = true;
+
+        // Act
+        viewModel.SaveCommand.Execute(null);
+
+        // Assert
+        Assert.True(requestCloseCalled);
+    }
+
+    [Fact]
+    public void SaveCommand_DoesNotRaiseRequestClose_OnValidationFailure()
+    {
+        // Arrange
+        var viewModel = new TransactionDialogViewModel(_categoryService, _transactionService)
+        {
+            Amount = 0, // Invalid
+            Description = "Test",
+            SelectedCategoryId = 1
+        };
+        var requestCloseCalled = false;
+        viewModel.RequestClose += (s, e) => requestCloseCalled = true;
+
+        // Act
+        viewModel.SaveCommand.Execute(null);
+
+        // Assert
+        Assert.False(requestCloseCalled);
+        Assert.False(viewModel.SaveSuccessful);
     }
 
     public void Dispose()

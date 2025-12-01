@@ -26,25 +26,21 @@ public partial class TransactionDialog : Window
     {
         if (e.OldValue is TransactionDialogViewModel oldViewModel)
         {
-            oldViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            oldViewModel.RequestClose -= OnRequestClose;
         }
 
         if (e.NewValue is TransactionDialogViewModel newViewModel)
         {
-            newViewModel.PropertyChanged += OnViewModelPropertyChanged;
+            newViewModel.RequestClose += OnRequestClose;
         }
     }
 
-    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnRequestClose(object? sender, EventArgs e)
     {
-        if (e.PropertyName == nameof(TransactionDialogViewModel.DialogResult) && 
-            sender is TransactionDialogViewModel viewModel)
+        if (sender is TransactionDialogViewModel viewModel)
         {
-            DialogResult = viewModel.DialogResult;
-            if (viewModel.DialogResult)
-            {
-                Close();
-            }
+            DialogResult = viewModel.SaveSuccessful;
         }
+        Close();
     }
 }
