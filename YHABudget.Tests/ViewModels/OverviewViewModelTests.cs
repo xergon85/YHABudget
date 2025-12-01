@@ -20,11 +20,11 @@ public class OverviewViewModelTests : IDisposable
             .Options;
 
         _context = new BudgetDbContext(options);
-        
+
         var transactionService = new TransactionService(_context);
         var recurringTransactionService = new RecurringTransactionService(_context);
         var calculationService = new CalculationService(_context);
-        
+
         _viewModel = new OverviewViewModel(transactionService, recurringTransactionService, calculationService);
     }
 
@@ -42,20 +42,20 @@ public class OverviewViewModelTests : IDisposable
         // Arrange
         var category = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
         _context.Categories.Add(category);
-        
-        var transaction1 = new Transaction 
-        { 
-            Amount = 35000m, 
-            Date = new DateTime(2025, 11, 1), 
-            CategoryId = 1, 
+
+        var transaction1 = new Transaction
+        {
+            Amount = 35000m,
+            Date = new DateTime(2025, 11, 1),
+            CategoryId = 1,
             Type = TransactionType.Income,
             Description = "Lön"
         };
-        var transaction2 = new Transaction 
-        { 
-            Amount = 8000m, 
-            Date = new DateTime(2025, 11, 15), 
-            CategoryId = 1, 
+        var transaction2 = new Transaction
+        {
+            Amount = 8000m,
+            Date = new DateTime(2025, 11, 15),
+            CategoryId = 1,
             Type = TransactionType.Income,
             Description = "Bidrag"
         };
@@ -77,20 +77,20 @@ public class OverviewViewModelTests : IDisposable
         // Arrange
         var category = new Category { Id = 1, Name = "Mat", Type = TransactionType.Expense };
         _context.Categories.Add(category);
-        
-        var transaction1 = new Transaction 
-        { 
-            Amount = 1250m, 
-            Date = new DateTime(2025, 11, 12), 
-            CategoryId = 1, 
+
+        var transaction1 = new Transaction
+        {
+            Amount = 1250m,
+            Date = new DateTime(2025, 11, 12),
+            CategoryId = 1,
             Type = TransactionType.Expense,
             Description = "ICA"
         };
-        var transaction2 = new Transaction 
-        { 
-            Amount = 850m, 
-            Date = new DateTime(2025, 11, 20), 
-            CategoryId = 1, 
+        var transaction2 = new Transaction
+        {
+            Amount = 850m,
+            Date = new DateTime(2025, 11, 20),
+            CategoryId = 1,
             Type = TransactionType.Expense,
             Description = "Bensin"
         };
@@ -113,20 +113,20 @@ public class OverviewViewModelTests : IDisposable
         var incomeCategory = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
         var expenseCategory = new Category { Id = 2, Name = "Mat", Type = TransactionType.Expense };
         _context.Categories.AddRange(incomeCategory, expenseCategory);
-        
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 35000m, 
-            Date = new DateTime(2025, 11, 1), 
-            CategoryId = 1, 
+
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 35000m,
+            Date = new DateTime(2025, 11, 1),
+            CategoryId = 1,
             Type = TransactionType.Income,
             Description = "Lön"
         });
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 22500m, 
-            Date = new DateTime(2025, 11, 5), 
-            CategoryId = 2, 
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 22500m,
+            Date = new DateTime(2025, 11, 5),
+            CategoryId = 2,
             Type = TransactionType.Expense,
             Description = "Utgifter"
         });
@@ -148,20 +148,20 @@ public class OverviewViewModelTests : IDisposable
         var category1 = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
         var category2 = new Category { Id = 2, Name = "Bidrag", Type = TransactionType.Income };
         _context.Categories.AddRange(category1, category2);
-        
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 35000m, 
-            Date = new DateTime(2025, 11, 1), 
-            CategoryId = 1, 
+
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 35000m,
+            Date = new DateTime(2025, 11, 1),
+            CategoryId = 1,
             Type = TransactionType.Income,
             Description = "Lön"
         });
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 8000m, 
-            Date = new DateTime(2025, 11, 15), 
-            CategoryId = 2, 
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 8000m,
+            Date = new DateTime(2025, 11, 15),
+            CategoryId = 2,
             Type = TransactionType.Income,
             Description = "Bidrag"
         });
@@ -186,20 +186,20 @@ public class OverviewViewModelTests : IDisposable
         var category1 = new Category { Id = 1, Name = "Mat", Type = TransactionType.Expense };
         var category2 = new Category { Id = 2, Name = "Transport", Type = TransactionType.Expense };
         _context.Categories.AddRange(category1, category2);
-        
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 6500m, 
-            Date = new DateTime(2025, 11, 12), 
-            CategoryId = 1, 
+
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 6500m,
+            Date = new DateTime(2025, 11, 12),
+            CategoryId = 1,
             Type = TransactionType.Expense,
             Description = "Mat"
         });
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 3000m, 
-            Date = new DateTime(2025, 11, 15), 
-            CategoryId = 2, 
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 3000m,
+            Date = new DateTime(2025, 11, 15),
+            CategoryId = 2,
             Type = TransactionType.Expense,
             Description = "Bensin"
         });
@@ -242,37 +242,37 @@ public class OverviewViewModelTests : IDisposable
         var incomeCategory = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
         var expenseCategory = new Category { Id = 2, Name = "Mat", Type = TransactionType.Expense };
         _context.Categories.AddRange(incomeCategory, expenseCategory);
-        
+
         // Add transactions across different months
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 35000m, 
-            Date = new DateTime(2025, 10, 25), 
-            CategoryId = 1, 
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 35000m,
+            Date = new DateTime(2025, 10, 25),
+            CategoryId = 1,
             Type = TransactionType.Income,
             Description = "Lön Oktober"
         });
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 35000m, 
-            Date = new DateTime(2025, 11, 25), 
-            CategoryId = 1, 
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 35000m,
+            Date = new DateTime(2025, 11, 25),
+            CategoryId = 1,
             Type = TransactionType.Income,
             Description = "Lön November"
         });
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 12000m, 
-            Date = new DateTime(2025, 10, 5), 
-            CategoryId = 2, 
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 12000m,
+            Date = new DateTime(2025, 10, 5),
+            CategoryId = 2,
             Type = TransactionType.Expense,
             Description = "Utgifter Oktober"
         });
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 15000m, 
-            Date = new DateTime(2025, 11, 5), 
-            CategoryId = 2, 
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 15000m,
+            Date = new DateTime(2025, 11, 5),
+            CategoryId = 2,
             Type = TransactionType.Expense,
             Description = "Utgifter November"
         });
@@ -295,28 +295,28 @@ public class OverviewViewModelTests : IDisposable
         var incomeCategory = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
         var expenseCategory = new Category { Id = 2, Name = "Mat", Type = TransactionType.Expense };
         _context.Categories.AddRange(incomeCategory, expenseCategory);
-        
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 35000m, 
-            Date = new DateTime(2025, 10, 25), 
-            CategoryId = 1, 
+
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 35000m,
+            Date = new DateTime(2025, 10, 25),
+            CategoryId = 1,
             Type = TransactionType.Income,
             Description = "Lön Oktober"
         });
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 35000m, 
-            Date = new DateTime(2025, 11, 25), 
-            CategoryId = 1, 
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 35000m,
+            Date = new DateTime(2025, 11, 25),
+            CategoryId = 1,
             Type = TransactionType.Income,
             Description = "Lön November"
         });
-        _context.Transactions.Add(new Transaction 
-        { 
-            Amount = 15000m, 
-            Date = new DateTime(2025, 10, 5), 
-            CategoryId = 2, 
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = 15000m,
+            Date = new DateTime(2025, 10, 5),
+            CategoryId = 2,
             Type = TransactionType.Expense,
             Description = "Utgifter Oktober"
         });

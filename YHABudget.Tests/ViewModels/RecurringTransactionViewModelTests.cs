@@ -176,7 +176,7 @@ public class RecurringTransactionViewModelTests : IDisposable
         };
         _recurringTransactionService.AddRecurringTransaction(recurring);
         viewModel.LoadDataCommand.Execute(null);
-        
+
         viewModel.SelectedRecurringTransaction = viewModel.RecurringTransactions[0];
 
         // Assert

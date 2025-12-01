@@ -8,19 +8,19 @@ namespace YHABudget.Data.Services;
 public class RecurringTransactionService : IRecurringTransactionService
 {
     private readonly BudgetDbContext _context;
-    
+
     public RecurringTransactionService(BudgetDbContext context)
     {
         _context = context;
     }
-    
+
     public RecurringTransaction AddRecurringTransaction(RecurringTransaction transaction)
     {
         _context.RecurringTransactions.Add(transaction);
         _context.SaveChanges();
         return transaction;
     }
-    
+
     public IEnumerable<RecurringTransaction> GetAllRecurringTransactions()
     {
         return _context.RecurringTransactions
@@ -28,14 +28,14 @@ public class RecurringTransactionService : IRecurringTransactionService
             .OrderBy(t => t.Description)
             .ToList();
     }
-    
+
     public RecurringTransaction? GetRecurringTransactionById(int id)
     {
         return _context.RecurringTransactions
             .Include(t => t.Category)
             .FirstOrDefault(t => t.Id == id);
     }
-    
+
     public IEnumerable<RecurringTransaction> GetActiveRecurringTransactions()
     {
         return _context.RecurringTransactions
@@ -44,13 +44,13 @@ public class RecurringTransactionService : IRecurringTransactionService
             .OrderBy(t => t.Description)
             .ToList();
     }
-    
+
     public void UpdateRecurringTransaction(RecurringTransaction transaction)
     {
         _context.RecurringTransactions.Update(transaction);
         _context.SaveChanges();
     }
-    
+
     public void DeleteRecurringTransaction(int id)
     {
         var transaction = _context.RecurringTransactions.Find(id);
@@ -60,7 +60,7 @@ public class RecurringTransactionService : IRecurringTransactionService
             _context.SaveChanges();
         }
     }
-    
+
     public void ToggleActive(int id)
     {
         var transaction = _context.RecurringTransactions.Find(id);
@@ -71,8 +71,10 @@ public class RecurringTransactionService : IRecurringTransactionService
         }
     }
 
-    public void ProcessRecurringTransactionsForMonth(DateTime month)
+    public IEnumerable<Transaction> ProcessRecurringTransactionsForMonth(DateTime month)
     {
+        var newTransactions = new List<Transaction>();
+
         // Get first day of month
         var monthStart = new DateTime(month.Year, month.Month, 1);
         var monthEnd = monthStart.AddMonths(1).AddDays(-1);
@@ -110,7 +112,11 @@ public class RecurringTransactionService : IRecurringTransactionService
                 }
             }
 
-            if (appliesToMonth)
+            // Only create transaction if the date has already occurred (today or earlier)
+            // and if it's not before the StartDate
+            if (appliesToMonth &&
+                transactionDate <= DateTime.Today &&
+                transactionDate >= recurring.StartDate.Date)
             {
                 // Check if transaction already exists for this month
                 var existingTransaction = _context.Transactions
@@ -131,16 +137,19 @@ public class RecurringTransactionService : IRecurringTransactionService
                         Description = recurring.Description,
                         Amount = recurring.Amount,
                         CategoryId = recurring.CategoryId,
+                        Category = recurring.Category,
                         Type = recurring.Type,
                         Date = transactionDate,
                         IsRecurring = true
                     };
 
                     _context.Transactions.Add(newTransaction);
+                    newTransactions.Add(newTransaction);
                 }
             }
         }
 
         _context.SaveChanges();
+        return newTransactions;
     }
 }

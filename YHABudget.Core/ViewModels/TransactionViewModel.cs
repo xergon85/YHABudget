@@ -117,10 +117,6 @@ public class TransactionViewModel : ViewModelBase
 
     private void LoadData()
     {
-        // Process recurring transactions for the current month or filtered month
-        var monthToProcess = SelectedMonthFilter ?? DateTime.Now;
-        _recurringTransactionService.ProcessRecurringTransactionsForMonth(monthToProcess);
-        
         // Load categories (only once)
         if (Categories.Count == 0)
         {

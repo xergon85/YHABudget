@@ -89,6 +89,8 @@ public class RecurringTransactionViewModel : ViewModelBase
         var result = _dialogService.ShowRecurringTransactionDialog();
         if (result == true)
         {
+            // Process recurring transactions for current month after adding
+            _recurringTransactionService.ProcessRecurringTransactionsForMonth(DateTime.Now);
             LoadData();
         }
     }
@@ -101,6 +103,8 @@ public class RecurringTransactionViewModel : ViewModelBase
         var result = _dialogService.ShowRecurringTransactionDialog(SelectedRecurringTransaction);
         if (result == true)
         {
+            // Process recurring transactions for current month after editing
+            _recurringTransactionService.ProcessRecurringTransactionsForMonth(DateTime.Now);
             LoadData();
         }
     }
@@ -118,6 +122,8 @@ public class RecurringTransactionViewModel : ViewModelBase
         {
             recurringTransaction.IsActive = !recurringTransaction.IsActive;
             _recurringTransactionService.UpdateRecurringTransaction(recurringTransaction);
+            // Process recurring transactions for current month after toggling
+            _recurringTransactionService.ProcessRecurringTransactionsForMonth(DateTime.Now);
             LoadData();
         }
     }

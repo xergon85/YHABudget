@@ -20,7 +20,7 @@ public class OverviewViewModel : ViewModelBase
     private readonly ITransactionService _transactionService;
     private readonly IRecurringTransactionService _recurringTransactionService;
     private readonly ICalculationService _calculationService;
-    
+
     private DateTime _selectedMonth;
     private decimal _totalIncome;
     private decimal _totalExpenses;
@@ -35,14 +35,14 @@ public class OverviewViewModel : ViewModelBase
         _transactionService = transactionService;
         _recurringTransactionService = recurringTransactionService;
         _calculationService = calculationService;
-        
+
         _selectedMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         _incomeByCategory = new ObservableCollection<CategorySummary>();
         _expensesByCategory = new ObservableCollection<CategorySummary>();
         _availableMonths = new ObservableCollection<MonthDisplay>();
-        
+
         LoadDataCommand = new RelayCommand(() => LoadData());
-        
+
         // Populate available months and load data
         PopulateAvailableMonths();
         CalculateAccountBalance();
@@ -56,6 +56,8 @@ public class OverviewViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedMonth, value))
             {
+                // Process recurring transactions for the new month
+                _recurringTransactionService.ProcessRecurringTransactionsForMonth(value);
                 LoadData();
             }
         }
@@ -107,13 +109,8 @@ public class OverviewViewModel : ViewModelBase
 
     private void LoadData()
     {
-        // Process recurring transactions for this month (idempotent - won't create duplicates)
-        _recurringTransactionService.ProcessRecurringTransactionsForMonth(SelectedMonth);
-        
         // Get all transactions for the selected month
-        var transactions = _transactionService.GetTransactionsByMonth(SelectedMonth);
-        
-        // Calculate income by category
+        var transactions = _transactionService.GetTransactionsByMonth(SelectedMonth);        // Calculate income by category
         var incomeGroups = transactions
             .Where(t => t.Type == TransactionType.Income)
             .GroupBy(t => t.Category?.Name ?? "Okategoriserad")
@@ -124,7 +121,7 @@ public class OverviewViewModel : ViewModelBase
             })
             .OrderByDescending(x => x.Total)
             .ToList();
-        
+
         // Update collection efficiently
         IncomeByCategory.Clear();
         foreach (var item in incomeGroups)
@@ -132,7 +129,7 @@ public class OverviewViewModel : ViewModelBase
             IncomeByCategory.Add(item);
         }
         TotalIncome = incomeGroups.Sum(x => x.Total);
-        
+
         // Calculate expenses by category
         var expenseGroups = transactions
             .Where(t => t.Type == TransactionType.Expense)
@@ -144,7 +141,7 @@ public class OverviewViewModel : ViewModelBase
             })
             .OrderByDescending(x => x.Total)
             .ToList();
-        
+
         // Update collection efficiently
         ExpensesByCategory.Clear();
         foreach (var item in expenseGroups)
@@ -152,7 +149,7 @@ public class OverviewViewModel : ViewModelBase
             ExpensesByCategory.Add(item);
         }
         TotalExpenses = expenseGroups.Sum(x => x.Total);
-        
+
         // Calculate net balance
         NetBalance = TotalIncome - TotalExpenses;
     }
@@ -161,15 +158,15 @@ public class OverviewViewModel : ViewModelBase
     {
         // Calculate account balance (all transactions, current balance)
         var allTransactions = _transactionService.GetAllTransactions();
-        
+
         var totalIncome = allTransactions
             .Where(t => t.Type == TransactionType.Income)
             .Sum(t => t.Amount);
-        
+
         var totalExpenses = allTransactions
             .Where(t => t.Type == TransactionType.Expense)
             .Sum(t => t.Amount);
-        
+
         AccountBalance = totalIncome - totalExpenses;
     }
 
@@ -177,7 +174,7 @@ public class OverviewViewModel : ViewModelBase
     {
         // Get all transactions
         var allTransactions = _transactionService.GetAllTransactions();
-        
+
         if (!allTransactions.Any())
         {
             // If no transactions, add current month
@@ -189,14 +186,14 @@ public class OverviewViewModel : ViewModelBase
             });
             return;
         }
-        
+
         // Get distinct months from transactions
         var distinctMonths = allTransactions
             .Select(t => new DateTime(t.Date.Year, t.Date.Month, 1))
             .Distinct()
             .OrderByDescending(d => d)
             .ToList();
-        
+
         // Add to collection
         AvailableMonths.Clear();
         foreach (var month in distinctMonths)
@@ -214,13 +211,13 @@ public class OverviewViewModel : ViewModelBase
         // Format as "November 2025" with Swedish culture
         var culture = new CultureInfo("sv-SE");
         var formatted = date.ToString("MMMM yyyy", culture);
-        
+
         // Capitalize first letter
         if (!string.IsNullOrEmpty(formatted))
         {
             formatted = char.ToUpper(formatted[0]) + formatted.Substring(1);
         }
-        
+
         return formatted;
     }
 }
