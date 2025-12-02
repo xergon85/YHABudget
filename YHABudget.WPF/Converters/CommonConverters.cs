@@ -2,9 +2,33 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Media;
 using YHABudget.Data.Enums;
 
 namespace YHABudget.WPF.Converters;
+
+public class DecimalToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is decimal decimalValue)
+        {
+            // Green for positive, red for negative, primary color for zero
+            if (decimalValue > 0)
+                return Application.Current.Resources["IncomeBrush"] as SolidColorBrush ?? Brushes.Green;
+            else if (decimalValue < 0)
+                return Application.Current.Resources["ExpenseBrush"] as SolidColorBrush ?? Brushes.Red;
+            else
+                return Application.Current.Resources["TextPrimaryBrush"] as SolidColorBrush ?? Brushes.Black;
+        }
+        return Application.Current.Resources["TextPrimaryBrush"] as SolidColorBrush ?? Brushes.Black;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
 
 public class EnumToBoolConverter : IValueConverter
 {
