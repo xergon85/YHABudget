@@ -3,10 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:converters="clr-namespace:YHABudget.WPF.Converters"
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="1000"
              Background="{StaticResource BackgroundLightBrush}">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </UserControl.Resources>
     <Grid Margin="30">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -126,9 +130,24 @@
                                                 Binding="{Binding Date, StringFormat='{}{0:yyyy-MM-dd}'}"
                                                 Width="120"/>
 
-                            <DataGridTextColumn Header="Beskrivning"
-                                                Binding="{Binding Description}"
-                                                Width="*"/>
+                            <DataGridTemplateColumn Header="Beskrivning"
+                                                    Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="↻ "
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       Foreground="{StaticResource PrimaryBrush}"
+                                                       ToolTip="Återkommande transaktion"
+                                                       Visibility="{Binding IsRecurring, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                       Margin="0,0,5,0"/>
+                                            <TextBlock Text="{Binding Description}"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
                             <DataGridTextColumn Header="Kategori"
                                                 Binding="{Binding Category.Name}"
