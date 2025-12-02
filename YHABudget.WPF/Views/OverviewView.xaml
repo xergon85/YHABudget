@@ -49,6 +49,7 @@
                           SelectedValue="{Binding SelectedMonth}"
                           SelectedValuePath="Date"
                           DisplayMemberPath="DisplayName"
+                          MaxDropDownHeight="300"
                           VerticalContentAlignment="Center"/>
             </StackPanel>
 
