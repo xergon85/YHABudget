@@ -11,6 +11,7 @@
              Background="{StaticResource BackgroundLightBrush}">
     <UserControl.Resources>
         <converters:DecimalToBrushConverter x:Key="DecimalToBrushConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="30">
@@ -156,6 +157,57 @@
                                        FontWeight="Bold"
                                        Foreground="{Binding NetBalance, Converter={StaticResource DecimalToBrushConverter}}"/>
                         </Grid>
+                    </Border>
+
+                    <!-- Expected Month Result (only for current month) -->
+                    <Border Grid.Row="3"
+                            Background="{StaticResource PrimaryLightBrush}"
+                            CornerRadius="4"
+                            Padding="15"
+                            Margin="0,15,0,0"
+                            Visibility="{Binding IsCurrentMonth, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="Förväntat månadsresultat"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,10"/>
+                            
+                            <!-- Scheduled Transactions Details -->
+                            <Grid Margin="0,0,0,5">
+                                <TextBlock Text="Inplanerade inkomster"
+                                           FontSize="14"
+                                           Foreground="{StaticResource IncomeBrush}"/>
+                                <TextBlock Text="{Binding ScheduledIncome, StringFormat='+ {0:N0} kr'}"
+                                           HorizontalAlignment="Right"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource IncomeBrush}"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <TextBlock Text="Inplanerade utgifter"
+                                           FontSize="14"
+                                           Foreground="{StaticResource ExpenseBrush}"/>
+                                <TextBlock Text="{Binding ScheduledExpenses, StringFormat='- {0:N0} kr'}"
+                                           HorizontalAlignment="Right"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource ExpenseBrush}"/>
+                            </Grid>
+                            
+                            <Separator Margin="0,5"/>
+                            
+                            <!-- Expected Result -->
+                            <Grid Margin="0,10,0,0">
+                                <TextBlock Text="Förväntat netto vid månadsslutet"
+                                           FontSize="16"
+                                           FontWeight="Bold"/>
+                                <TextBlock Text="{Binding ExpectedMonthResult, StringFormat='{}{0:N0} kr'}"
+                                           HorizontalAlignment="Right"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="{Binding ExpectedMonthResult, Converter={StaticResource DecimalToBrushConverter}}"/>
+                            </Grid>
+                        </StackPanel>
                     </Border>
                 </Grid>
             </Border>

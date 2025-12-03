@@ -18,7 +18,7 @@ public class TransactionViewModel : ViewModelBase
 
     private ObservableCollection<Transaction> _transactions;
     private ObservableCollection<Category> _categories;
-    private List<Transaction> _allTransactions = new(); // Store all transactions
+    private List<Transaction> _allTransactions = new();
     private TransactionType? _selectedTypeFilter;
     private int? _selectedCategoryFilter;
     private DateTime? _selectedMonthFilter;
@@ -179,7 +179,7 @@ public class TransactionViewModel : ViewModelBase
     private void DeleteTransaction(int transactionId)
     {
         _transactionService.DeleteTransaction(transactionId);
-        
+
         // Remove from in-memory list
         var transaction = _allTransactions.FirstOrDefault(t => t.Id == transactionId);
         if (transaction != null)
