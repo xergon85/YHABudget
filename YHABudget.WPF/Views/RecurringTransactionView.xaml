@@ -130,11 +130,9 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <CheckBox IsChecked="{Binding IsActive, Mode=OneWay}"
-                                                  Command="{Binding DataContext.ToggleActiveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                  CommandParameter="{Binding Id}"
                                                   Content="Aktiv"
                                                   VerticalAlignment="Center"
-                                                  IsHitTestVisible="True"/>
+                                                  IsEnabled="False"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
