@@ -31,11 +31,11 @@ public partial class App : Application
                 services.AddScoped<IDialogService, DialogService>();
 
                 // Register ViewModels
-                services.AddTransient<MainViewModel>();
-                services.AddTransient<OverviewViewModel>();
-                services.AddTransient<TransactionViewModel>();
-                services.AddTransient<RecurringTransactionViewModel>();
-                services.AddTransient<SettingsViewModel>();
+                services.AddSingleton<MainViewModel>();
+                services.AddSingleton<OverviewViewModel>();
+                services.AddSingleton<TransactionViewModel>();
+                services.AddSingleton<RecurringTransactionViewModel>();
+                services.AddSingleton<SettingsViewModel>();
 
                 // Register MainWindow
                 services.AddSingleton<MainWindow>();
