@@ -60,28 +60,8 @@ public class RecurringTransactionViewModel : ViewModelBase
     {
         var recurringTransactions = _recurringTransactionService.GetAllRecurringTransactions().ToList();
 
-        // Update existing collection efficiently
-        for (int i = RecurringTransactions.Count - 1; i >= 0; i--)
-        {
-            if (!recurringTransactions.Any(rt => rt.Id == RecurringTransactions[i].Id))
-            {
-                RecurringTransactions.RemoveAt(i);
-            }
-        }
-
-        foreach (var recurringTransaction in recurringTransactions)
-        {
-            var existing = RecurringTransactions.FirstOrDefault(rt => rt.Id == recurringTransaction.Id);
-            if (existing == null)
-            {
-                RecurringTransactions.Add(recurringTransaction);
-            }
-            else if (!existing.Equals(recurringTransaction))
-            {
-                int index = RecurringTransactions.IndexOf(existing);
-                RecurringTransactions[index] = recurringTransaction;
-            }
-        }
+        // Replace entire collection with single assignment (one notification instead of N+1)
+        RecurringTransactions = new ObservableCollection<RecurringTransaction>(recurringTransactions);
     }
 
     private void AddRecurringTransaction()

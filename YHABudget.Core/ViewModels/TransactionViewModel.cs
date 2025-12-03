@@ -18,6 +18,7 @@ public class TransactionViewModel : ViewModelBase
 
     private ObservableCollection<Transaction> _transactions;
     private ObservableCollection<Category> _categories;
+    private List<Transaction> _allTransactions = new(); // Store all transactions
     private TransactionType? _selectedTypeFilter;
     private int? _selectedCategoryFilter;
     private DateTime? _selectedMonthFilter;
@@ -62,7 +63,7 @@ public class TransactionViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedTypeFilter, value))
             {
-                LoadData();
+                ApplyFilters();
             }
         }
     }
@@ -74,7 +75,7 @@ public class TransactionViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedCategoryFilter, value))
             {
-                LoadData();
+                ApplyFilters();
             }
         }
     }
@@ -86,7 +87,7 @@ public class TransactionViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedMonthFilter, value))
             {
-                LoadData();
+                ApplyFilters();
             }
         }
     }
@@ -115,6 +116,40 @@ public class TransactionViewModel : ViewModelBase
     public ICommand AddTransactionCommand { get; }
     public ICommand EditTransactionCommand { get; }
 
+    private void ApplyFilters()
+    {
+        // Filter transactions in memory (no database call)
+        var filtered = _allTransactions.AsEnumerable();
+
+        if (SelectedTypeFilter.HasValue)
+        {
+            filtered = filtered.Where(t => t.Type == SelectedTypeFilter.Value);
+        }
+
+        if (SelectedCategoryFilter.HasValue)
+        {
+            filtered = filtered.Where(t => t.CategoryId == SelectedCategoryFilter.Value);
+        }
+
+        if (SelectedMonthFilter.HasValue)
+        {
+            var month = SelectedMonthFilter.Value;
+            var monthStart = new DateTime(month.Year, month.Month, 1);
+            var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+            filtered = filtered.Where(t => t.Date >= monthStart && t.Date <= monthEnd);
+        }
+
+        var filteredList = filtered.OrderByDescending(t => t.Date).ToList();
+
+        // Replace collection (single notification)
+        Transactions = new ObservableCollection<Transaction>(filteredList);
+
+        // Calculate total
+        TotalAmount = Transactions.Sum(t =>
+            t.Type == TransactionType.Income ? t.Amount : -t.Amount
+        );
+    }
+
     private void LoadData()
     {
         // Load categories (only once)
@@ -127,54 +162,11 @@ public class TransactionViewModel : ViewModelBase
             }
         }
 
-        // Load transactions based on filters
-        var newTransactions = _transactionService.GetTransactionsByFilter(
-            SelectedTypeFilter,
-            SelectedCategoryFilter,
-            SelectedMonthFilter
-        ).ToList();
+        // Load ALL transactions from database once
+        _allTransactions = _transactionService.GetAllTransactions().ToList();
 
-        // Update existing collection efficiently
-        // Remove transactions that are no longer in the new list
-        for (int i = Transactions.Count - 1; i >= 0; i--)
-        {
-            if (!newTransactions.Any(t => t.Id == Transactions[i].Id))
-            {
-                Transactions.RemoveAt(i);
-            }
-        }
-
-        // Add or update transactions
-        foreach (var transaction in newTransactions)
-        {
-            var existing = Transactions.FirstOrDefault(t => t.Id == transaction.Id);
-            if (existing == null)
-            {
-                // Add new transaction in the right position (by date, descending)
-                int insertIndex = 0;
-                for (int i = 0; i < Transactions.Count; i++)
-                {
-                    if (transaction.Date > Transactions[i].Date)
-                    {
-                        insertIndex = i;
-                        break;
-                    }
-                    insertIndex = i + 1;
-                }
-                Transactions.Insert(insertIndex, transaction);
-            }
-            else if (!existing.Equals(transaction))
-            {
-                // Update existing transaction properties
-                int index = Transactions.IndexOf(existing);
-                Transactions[index] = transaction;
-            }
-        }
-
-        // Calculate total (income positive, expense negative for display)
-        TotalAmount = Transactions.Sum(t =>
-            t.Type == TransactionType.Income ? t.Amount : -t.Amount
-        );
+        // Apply current filters to display
+        ApplyFilters();
     }
 
     private void ClearFilters()
@@ -187,7 +179,14 @@ public class TransactionViewModel : ViewModelBase
     private void DeleteTransaction(int transactionId)
     {
         _transactionService.DeleteTransaction(transactionId);
-        LoadData();
+        
+        // Remove from in-memory list
+        var transaction = _allTransactions.FirstOrDefault(t => t.Id == transactionId);
+        if (transaction != null)
+        {
+            _allTransactions.Remove(transaction);
+            ApplyFilters();
+        }
     }
 
     private void AddTransaction()
@@ -195,7 +194,14 @@ public class TransactionViewModel : ViewModelBase
         var result = _dialogService.ShowTransactionDialog();
         if (result == true)
         {
-            LoadData();
+            // Reload just the new transaction from database
+            var allTransactions = _transactionService.GetAllTransactions().ToList();
+            var newTransaction = allTransactions.FirstOrDefault(t => !_allTransactions.Any(existing => existing.Id == t.Id));
+            if (newTransaction != null)
+            {
+                _allTransactions.Add(newTransaction);
+                ApplyFilters();
+            }
         }
     }
 
@@ -204,10 +210,6 @@ public class TransactionViewModel : ViewModelBase
         if (SelectedTransaction == null)
             return;
 
-        var result = _dialogService.ShowTransactionDialog(SelectedTransaction);
-        if (result == true)
-        {
-            LoadData();
-        }
+        _dialogService.ShowTransactionDialog(SelectedTransaction);
     }
 }

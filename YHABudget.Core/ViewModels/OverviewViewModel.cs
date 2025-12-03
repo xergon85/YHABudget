@@ -122,12 +122,8 @@ public class OverviewViewModel : ViewModelBase
             .OrderByDescending(x => x.Total)
             .ToList();
 
-        // Update collection efficiently
-        IncomeByCategory.Clear();
-        foreach (var item in incomeGroups)
-        {
-            IncomeByCategory.Add(item);
-        }
+        // Replace entire collection with single assignment
+        IncomeByCategory = new ObservableCollection<CategorySummary>(incomeGroups);
         TotalIncome = incomeGroups.Sum(x => x.Total);
 
         // Calculate expenses by category
@@ -142,12 +138,8 @@ public class OverviewViewModel : ViewModelBase
             .OrderByDescending(x => x.Total)
             .ToList();
 
-        // Update collection efficiently
-        ExpensesByCategory.Clear();
-        foreach (var item in expenseGroups)
-        {
-            ExpensesByCategory.Add(item);
-        }
+        // Replace entire collection with single assignment
+        ExpensesByCategory = new ObservableCollection<CategorySummary>(expenseGroups);
         TotalExpenses = expenseGroups.Sum(x => x.Total);
 
         // Calculate net balance

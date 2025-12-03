@@ -13,6 +13,7 @@ public class TransactionDialogViewModel : ViewModelBase
     private readonly ICategoryService _categoryService;
     private readonly ITransactionService _transactionService;
 
+    private Transaction? _transactionReference; // Keep reference to update original object
     private int? _transactionId;
     private decimal? _amount;
     private string _description = string.Empty;
@@ -128,6 +129,7 @@ public class TransactionDialogViewModel : ViewModelBase
 
     public void LoadTransaction(Transaction transaction)
     {
+        _transactionReference = transaction; // Store reference
         IsEditMode = true;
         TransactionId = transaction.Id;
         Amount = transaction.Amount;
@@ -211,19 +213,16 @@ public class TransactionDialogViewModel : ViewModelBase
 
         try
         {
-            if (IsEditMode && TransactionId.HasValue)
+            if (IsEditMode && _transactionReference != null)
             {
-                var transaction = _transactionService.GetTransactionById(TransactionId.Value);
-                if (transaction != null)
-                {
-                    transaction.Amount = Amount!.Value;
-                    transaction.Description = Description;
-                    transaction.Date = Date;
-                    transaction.CategoryId = SelectedCategoryId!.Value;
-                    transaction.Type = TransactionType;
+                // Update the original transaction object directly
+                _transactionReference.Amount = Amount!.Value;
+                _transactionReference.Description = Description;
+                _transactionReference.Date = Date;
+                _transactionReference.CategoryId = SelectedCategoryId!.Value;
+                _transactionReference.Type = TransactionType;
 
-                    _transactionService.UpdateTransaction(transaction);
-                }
+                _transactionService.UpdateTransaction(_transactionReference);
             }
             else
             {
