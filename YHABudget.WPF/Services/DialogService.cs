@@ -14,7 +14,7 @@ public class DialogService : IDialogService
     private readonly IRecurringTransactionService _recurringTransactionService;
 
     public DialogService(
-        ICategoryService categoryService, 
+        ICategoryService categoryService,
         ITransactionService transactionService,
         IRecurringTransactionService recurringTransactionService)
     {
