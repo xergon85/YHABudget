@@ -2,8 +2,8 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Input;
 using YHABudget.Core.Commands;
-using YHABudget.Core.DTOs;
 using YHABudget.Core.MVVM;
+using YHABudget.Data.DTOs;
 using YHABudget.Data.Enums;
 using YHABudget.Data.Services;
 
@@ -26,6 +26,10 @@ public class OverviewViewModel : ViewModelBase
     private decimal _totalExpenses;
     private decimal _netBalance;
     private decimal _accountBalance;
+    private decimal _expectedMonthResult;
+    private decimal _scheduledIncome;
+    private decimal _scheduledExpenses;
+    private bool _isCurrentMonth;
     private ObservableCollection<CategorySummary> _incomeByCategory;
     private ObservableCollection<CategorySummary> _expensesByCategory;
     private ObservableCollection<MonthDisplay> _availableMonths;
@@ -47,6 +51,7 @@ public class OverviewViewModel : ViewModelBase
         PopulateAvailableMonths();
         CalculateAccountBalance();
         LoadData();
+        CalculateExpectedMonthResult();
     }
 
     public DateTime SelectedMonth
@@ -59,6 +64,7 @@ public class OverviewViewModel : ViewModelBase
                 // Process recurring transactions for the new month
                 _recurringTransactionService.ProcessRecurringTransactionsForMonth(value);
                 LoadData();
+                CalculateExpectedMonthResult();
             }
         }
     }
@@ -85,6 +91,30 @@ public class OverviewViewModel : ViewModelBase
     {
         get => _accountBalance;
         private set => SetProperty(ref _accountBalance, value);
+    }
+
+    public decimal ExpectedMonthResult
+    {
+        get => _expectedMonthResult;
+        private set => SetProperty(ref _expectedMonthResult, value);
+    }
+
+    public decimal ScheduledIncome
+    {
+        get => _scheduledIncome;
+        private set => SetProperty(ref _scheduledIncome, value);
+    }
+
+    public decimal ScheduledExpenses
+    {
+        get => _scheduledExpenses;
+        private set => SetProperty(ref _scheduledExpenses, value);
+    }
+
+    public bool IsCurrentMonth
+    {
+        get => _isCurrentMonth;
+        private set => SetProperty(ref _isCurrentMonth, value);
     }
 
     public ObservableCollection<CategorySummary> IncomeByCategory
@@ -144,6 +174,16 @@ public class OverviewViewModel : ViewModelBase
 
         // Calculate net balance
         NetBalance = TotalIncome - TotalExpenses;
+    }
+
+    private void CalculateExpectedMonthResult()
+    {
+        var result = _calculationService.CalculateExpectedMonthResult(SelectedMonth, NetBalance);
+        
+        IsCurrentMonth = result.IsCurrentMonth;
+        ScheduledIncome = result.ScheduledIncome;
+        ScheduledExpenses = result.ScheduledExpenses;
+        ExpectedMonthResult = result.ProjectedNetBalance;
     }
 
     private void CalculateAccountBalance()

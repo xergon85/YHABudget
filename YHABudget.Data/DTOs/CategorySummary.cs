@@ -1,4 +1,4 @@
-namespace YHABudget.Core.DTOs;
+namespace YHABudget.Data.DTOs;
 
 public class CategorySummary
 {
