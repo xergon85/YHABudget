@@ -44,28 +44,7 @@ public class TransactionService : ITransactionService
     
     public IEnumerable<Transaction> GetTransactionsByFilter(TransactionType? type, int? categoryId, DateTime? month)
     {
-        var query = _context.Transactions
-            .Include(t => t.Category)
-            .AsQueryable();
-        
-        if (type.HasValue)
-        {
-            query = query.Where(t => t.Type == type.Value);
-        }
-        
-        if (categoryId.HasValue)
-        {
-            query = query.Where(t => t.CategoryId == categoryId.Value);
-        }
-        
-        if (month.HasValue)
-        {
-            var startDate = new DateTime(month.Value.Year, month.Value.Month, 1);
-            var endDate = startDate.AddMonths(1).AddDays(-1);
-            query = query.Where(t => t.Date >= startDate && t.Date <= endDate);
-        }
-        
-        return query.OrderByDescending(t => t.Date).ToList();
+        return _queries.GetTransactionsByFilter(type, categoryId, month);
     }
     
     public void UpdateTransaction(Transaction transaction)

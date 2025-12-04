@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using YHABudget.Data.Context;
+using YHABudget.Data.Enums;
 using YHABudget.Data.Models;
 
 namespace YHABudget.Data.Queries;
@@ -88,5 +89,38 @@ public class TransactionQueries
             .Where(t => t.CategoryId == categoryId)
             .OrderByDescending(t => t.Date)
             .ToList();
+    }
+
+    public List<Transaction> GetTransactionsByFilter(TransactionType? type, int? categoryId, DateTime? month)
+    {
+        var query = _context.Transactions
+            .Include(t => t.Category)
+            .AsQueryable();
+        
+        query = ApplyTypeFilter(query, type);
+        query = ApplyCategoryFilter(query, categoryId);
+        query = ApplyMonthFilter(query, month);
+        
+        return query.OrderByDescending(t => t.Date).ToList();
+    }
+
+    private IQueryable<Transaction> ApplyTypeFilter(IQueryable<Transaction> query, TransactionType? type)
+    {
+        return type.HasValue ? query.Where(t => t.Type == type.Value) : query;
+    }
+
+    private IQueryable<Transaction> ApplyCategoryFilter(IQueryable<Transaction> query, int? categoryId)
+    {
+        return categoryId.HasValue ? query.Where(t => t.CategoryId == categoryId.Value) : query;
+    }
+
+    private IQueryable<Transaction> ApplyMonthFilter(IQueryable<Transaction> query, DateTime? month)
+    {
+        if (!month.HasValue)
+            return query;
+
+        var startDate = new DateTime(month.Value.Year, month.Value.Month, 1);
+        var endDate = startDate.AddMonths(1).AddDays(-1);
+        return query.Where(t => t.Date >= startDate && t.Date <= endDate);
     }
 }
