@@ -68,82 +68,90 @@ public class RecurringTransactionService : IRecurringTransactionService
     public IEnumerable<Transaction> ProcessRecurringTransactionsForMonth(DateTime month)
     {
         var newTransactions = new List<Transaction>();
-
-        // Get first day of month
         var monthStart = new DateTime(month.Year, month.Month, 1);
         var monthEnd = monthStart.AddMonths(1).AddDays(-1);
 
-        // Get all active recurring transactions that should apply to this month
-        var activeRecurring = _context.RecurringTransactions
+        var activeRecurring = GetRecurringTransactionsForMonth(monthStart, monthEnd);
+
+        foreach (var recurring in activeRecurring)
+        {
+            var transactionDate = TryCalculateTransactionDate(recurring, month);
+            if (!transactionDate.HasValue)
+                continue;
+
+            if (!ShouldCreateTransaction(transactionDate.Value, recurring.StartDate.Date))
+                continue;
+
+            if (TransactionAlreadyExists(recurring, monthStart, monthEnd))
+                continue;
+
+            var newTransaction = CreateTransactionFromRecurring(recurring, transactionDate.Value);
+            _context.Transactions.Add(newTransaction);
+            newTransactions.Add(newTransaction);
+        }
+
+        _context.SaveChanges();
+        return newTransactions;
+    }
+
+    private List<RecurringTransaction> GetRecurringTransactionsForMonth(DateTime monthStart, DateTime monthEnd)
+    {
+        return _context.RecurringTransactions
             .Include(rt => rt.Category)
             .Where(rt => rt.IsActive &&
                          rt.StartDate <= monthEnd &&
                          (rt.EndDate == null || rt.EndDate >= monthStart))
             .ToList();
+    }
 
-        foreach (var recurring in activeRecurring)
+    private DateTime? TryCalculateTransactionDate(RecurringTransaction recurring, DateTime month)
+    {
+        if (recurring.RecurrenceType == RecurrenceType.Monthly)
         {
-            // Determine if this recurring transaction applies to this month
-            bool appliesToMonth = false;
-            DateTime transactionDate = monthStart;
+            int day = Math.Min(recurring.StartDate.Day, DateTime.DaysInMonth(month.Year, month.Month));
+            return new DateTime(month.Year, month.Month, day);
+        }
 
-            if (recurring.RecurrenceType == RecurrenceType.Monthly)
+        if (recurring.RecurrenceType == RecurrenceType.Yearly && recurring.RecurrenceMonth.HasValue)
+        {
+            if (month.Month == recurring.RecurrenceMonth.Value)
             {
-                // Monthly: applies to every month
-                appliesToMonth = true;
-                // Use the day from StartDate, or 1st if StartDate day > days in month
                 int day = Math.Min(recurring.StartDate.Day, DateTime.DaysInMonth(month.Year, month.Month));
-                transactionDate = new DateTime(month.Year, month.Month, day);
-            }
-            else if (recurring.RecurrenceType == RecurrenceType.Yearly && recurring.RecurrenceMonth.HasValue)
-            {
-                // Yearly: only applies if this is the specified month
-                if (month.Month == recurring.RecurrenceMonth.Value)
-                {
-                    appliesToMonth = true;
-                    int day = Math.Min(recurring.StartDate.Day, DateTime.DaysInMonth(month.Year, month.Month));
-                    transactionDate = new DateTime(month.Year, month.Month, day);
-                }
-            }
-
-            // Only create transaction if the date has already occurred (today or earlier)
-            // and if it's not before the StartDate
-            if (appliesToMonth &&
-                transactionDate <= DateTime.Today &&
-                transactionDate >= recurring.StartDate.Date)
-            {
-                // Check if transaction already exists for this month
-                var existingTransaction = _context.Transactions
-                    .FirstOrDefault(t =>
-                        t.Description == recurring.Description &&
-                        t.Amount == recurring.Amount &&
-                        t.CategoryId == recurring.CategoryId &&
-                        t.Type == recurring.Type &&
-                        t.IsRecurring == true &&
-                        t.Date >= monthStart &&
-                        t.Date <= monthEnd);
-
-                if (existingTransaction == null)
-                {
-                    // Create new transaction from recurring template
-                    var newTransaction = new Transaction
-                    {
-                        Description = recurring.Description,
-                        Amount = recurring.Amount,
-                        CategoryId = recurring.CategoryId,
-                        Category = recurring.Category,
-                        Type = recurring.Type,
-                        Date = transactionDate,
-                        IsRecurring = true
-                    };
-
-                    _context.Transactions.Add(newTransaction);
-                    newTransactions.Add(newTransaction);
-                }
+                return new DateTime(month.Year, month.Month, day);
             }
         }
 
-        _context.SaveChanges();
-        return newTransactions;
+        return null;
+    }
+
+    private bool ShouldCreateTransaction(DateTime transactionDate, DateTime startDate)
+    {
+        return transactionDate <= DateTime.Today && transactionDate >= startDate;
+    }
+
+    private bool TransactionAlreadyExists(RecurringTransaction recurring, DateTime monthStart, DateTime monthEnd)
+    {
+        return _context.Transactions
+            .Any(t => t.Description == recurring.Description &&
+                     t.Amount == recurring.Amount &&
+                     t.CategoryId == recurring.CategoryId &&
+                     t.Type == recurring.Type &&
+                     t.IsRecurring == true &&
+                     t.Date >= monthStart &&
+                     t.Date <= monthEnd);
+    }
+
+    private Transaction CreateTransactionFromRecurring(RecurringTransaction recurring, DateTime date)
+    {
+        return new Transaction
+        {
+            Description = recurring.Description,
+            Amount = recurring.Amount,
+            CategoryId = recurring.CategoryId,
+            Category = recurring.Category,
+            Type = recurring.Type,
+            Date = date,
+            IsRecurring = true
+        };
     }
 }
