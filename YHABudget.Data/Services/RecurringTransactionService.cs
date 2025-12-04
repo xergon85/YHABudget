@@ -2,16 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using YHABudget.Data.Context;
 using YHABudget.Data.Enums;
 using YHABudget.Data.Models;
+using YHABudget.Data.Queries;
 
 namespace YHABudget.Data.Services;
 
 public class RecurringTransactionService : IRecurringTransactionService
 {
     private readonly BudgetDbContext _context;
+    private readonly RecurringTransactionQueries _queries;
 
     public RecurringTransactionService(BudgetDbContext context)
     {
         _context = context;
+        _queries = new RecurringTransactionQueries(context);
     }
 
     public RecurringTransaction AddRecurringTransaction(RecurringTransaction transaction)
@@ -23,26 +26,17 @@ public class RecurringTransactionService : IRecurringTransactionService
 
     public IEnumerable<RecurringTransaction> GetAllRecurringTransactions()
     {
-        return _context.RecurringTransactions
-            .Include(t => t.Category)
-            .OrderBy(t => t.Description)
-            .ToList();
+        return _queries.GetAllRecurringTransactions();
     }
 
     public RecurringTransaction? GetRecurringTransactionById(int id)
     {
-        return _context.RecurringTransactions
-            .Include(t => t.Category)
-            .FirstOrDefault(t => t.Id == id);
+        return _queries.GetRecurringTransactionById(id);
     }
 
     public IEnumerable<RecurringTransaction> GetActiveRecurringTransactions()
     {
-        return _context.RecurringTransactions
-            .Include(t => t.Category)
-            .Where(t => t.IsActive)
-            .OrderBy(t => t.Description)
-            .ToList();
+        return _queries.GetActiveRecurringTransactions();
     }
 
     public void UpdateRecurringTransaction(RecurringTransaction transaction)

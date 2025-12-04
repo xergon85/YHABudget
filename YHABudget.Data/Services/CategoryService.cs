@@ -1,37 +1,34 @@
 using YHABudget.Data.Context;
 using YHABudget.Data.Enums;
 using YHABudget.Data.Models;
+using YHABudget.Data.Queries;
 
 namespace YHABudget.Data.Services;
 
 public class CategoryService : ICategoryService
 {
     private readonly BudgetDbContext _context;
+    private readonly CategoryQueries _queries;
     
     public CategoryService(BudgetDbContext context)
     {
         _context = context;
+        _queries = new CategoryQueries(context);
     }
     
     public IEnumerable<Category> GetAllCategories()
     {
-        return _context.Categories
-            .OrderBy(c => c.Type)
-            .ThenBy(c => c.Name)
-            .ToList();
+        return _queries.GetAllCategories();
     }
     
     public Category? GetCategoryById(int id)
     {
-        return _context.Categories.Find(id);
+        return _queries.GetCategoryById(id);
     }
     
     public IEnumerable<Category> GetCategoriesByType(TransactionType type)
     {
-        return _context.Categories
-            .Where(c => c.Type == type)
-            .OrderBy(c => c.Name)
-            .ToList();
+        return _queries.GetCategoriesOfType(type);
     }
     
     public Category AddCategory(Category category)

@@ -2,16 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using YHABudget.Data.Context;
 using YHABudget.Data.Enums;
 using YHABudget.Data.Models;
+using YHABudget.Data.Queries;
 
 namespace YHABudget.Data.Services;
 
 public class TransactionService : ITransactionService
 {
     private readonly BudgetDbContext _context;
+    private readonly TransactionQueries _queries;
     
     public TransactionService(BudgetDbContext context)
     {
         _context = context;
+        _queries = new TransactionQueries(context);
     }
     
     public Transaction AddTransaction(Transaction transaction)
@@ -23,17 +26,12 @@ public class TransactionService : ITransactionService
     
     public IEnumerable<Transaction> GetAllTransactions()
     {
-        return _context.Transactions
-            .Include(t => t.Category)
-            .OrderByDescending(t => t.Date)
-            .ToList();
+        return _queries.GetAllTransactions();
     }
     
     public Transaction? GetTransactionById(int id)
     {
-        return _context.Transactions
-            .Include(t => t.Category)
-            .FirstOrDefault(t => t.Id == id);
+        return _queries.GetTransactionById(id);
     }
     
     public IEnumerable<Transaction> GetTransactionsByMonth(DateTime month)
@@ -41,11 +39,7 @@ public class TransactionService : ITransactionService
         var startDate = new DateTime(month.Year, month.Month, 1);
         var endDate = startDate.AddMonths(1).AddDays(-1);
         
-        return _context.Transactions
-            .Include(t => t.Category)
-            .Where(t => t.Date >= startDate && t.Date <= endDate)
-            .OrderByDescending(t => t.Date)
-            .ToList();
+        return _queries.GetTransactionsForDateRangeWithCategory(startDate, endDate);
     }
     
     public IEnumerable<Transaction> GetTransactionsByFilter(TransactionType? type, int? categoryId, DateTime? month)
