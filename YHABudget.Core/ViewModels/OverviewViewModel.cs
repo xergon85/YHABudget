@@ -9,12 +9,6 @@ using YHABudget.Data.Services;
 
 namespace YHABudget.Core.ViewModels;
 
-public class MonthDisplay
-{
-    public DateTime Date { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
-}
-
 public class OverviewViewModel : ViewModelBase
 {
     private readonly IRecurringTransactionService _recurringTransactionService;
