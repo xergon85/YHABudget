@@ -17,7 +17,6 @@ public class MonthDisplay
 
 public class OverviewViewModel : ViewModelBase
 {
-    private readonly ITransactionService _transactionService;
     private readonly IRecurringTransactionService _recurringTransactionService;
     private readonly ICalculationService _calculationService;
 
@@ -26,30 +25,35 @@ public class OverviewViewModel : ViewModelBase
     private decimal _totalExpenses;
     private decimal _netBalance;
     private decimal _accountBalance;
+    private decimal _expectedAccountBalance;
     private decimal _expectedMonthResult;
     private decimal _scheduledIncome;
     private decimal _scheduledExpenses;
     private bool _isCurrentMonth;
+    private bool _isPastMonth;
+    private ObservableCollection<ScheduledTransactionSummary> _scheduledIncomeTransactions;
+    private ObservableCollection<ScheduledTransactionSummary> _scheduledExpenseTransactions;
     private ObservableCollection<CategorySummary> _incomeByCategory;
     private ObservableCollection<CategorySummary> _expensesByCategory;
     private ObservableCollection<MonthDisplay> _availableMonths;
 
-    public OverviewViewModel(ITransactionService transactionService, IRecurringTransactionService recurringTransactionService, ICalculationService calculationService)
+    public OverviewViewModel(IRecurringTransactionService recurringTransactionService, ICalculationService calculationService)
     {
-        _transactionService = transactionService;
         _recurringTransactionService = recurringTransactionService;
         _calculationService = calculationService;
 
-        _selectedMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         _incomeByCategory = new ObservableCollection<CategorySummary>();
         _expensesByCategory = new ObservableCollection<CategorySummary>();
         _availableMonths = new ObservableCollection<MonthDisplay>();
+        _scheduledIncomeTransactions = new ObservableCollection<ScheduledTransactionSummary>();
+        _scheduledExpenseTransactions = new ObservableCollection<ScheduledTransactionSummary>();
 
         LoadDataCommand = new RelayCommand(() => LoadData());
 
-        // Populate available months and load data
-        PopulateAvailableMonths();
-        CalculateAccountBalance();
+        // Set selected month to current month initially
+        _selectedMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        
+        // Load data (this populates AvailableMonths)
         LoadData();
         CalculateExpectedMonthResult();
     }
@@ -93,6 +97,12 @@ public class OverviewViewModel : ViewModelBase
         private set => SetProperty(ref _accountBalance, value);
     }
 
+    public decimal ExpectedAccountBalance
+    {
+        get => _expectedAccountBalance;
+        private set => SetProperty(ref _expectedAccountBalance, value);
+    }
+
     public decimal ExpectedMonthResult
     {
         get => _expectedMonthResult;
@@ -117,6 +127,24 @@ public class OverviewViewModel : ViewModelBase
         private set => SetProperty(ref _isCurrentMonth, value);
     }
 
+    public bool IsPastMonth
+    {
+        get => _isPastMonth;
+        private set => SetProperty(ref _isPastMonth, value);
+    }
+
+    public ObservableCollection<ScheduledTransactionSummary> ScheduledIncomeTransactions
+    {
+        get => _scheduledIncomeTransactions;
+        private set => SetProperty(ref _scheduledIncomeTransactions, value);
+    }
+
+    public ObservableCollection<ScheduledTransactionSummary> ScheduledExpenseTransactions
+    {
+        get => _scheduledExpenseTransactions;
+        private set => SetProperty(ref _scheduledExpenseTransactions, value);
+    }
+
     public ObservableCollection<CategorySummary> IncomeByCategory
     {
         get => _incomeByCategory;
@@ -139,103 +167,45 @@ public class OverviewViewModel : ViewModelBase
 
     private void LoadData()
     {
-        // Get all transactions for the selected month
-        var transactions = _transactionService.GetTransactionsByMonth(SelectedMonth);        // Calculate income by category
-        var incomeGroups = transactions
-            .Where(t => t.Type == TransactionType.Income)
-            .GroupBy(t => t.Category?.Name ?? "Okategoriserad")
-            .Select(g => new CategorySummary
+        var overview = _calculationService.GetMonthOverview(SelectedMonth);
+        
+        TotalIncome = overview.TotalIncome;
+        TotalExpenses = overview.TotalExpenses;
+        NetBalance = overview.NetBalance;
+        AccountBalance = overview.AccountBalance;
+        IncomeByCategory = new ObservableCollection<CategorySummary>(overview.IncomeByCategory);
+        ExpensesByCategory = new ObservableCollection<CategorySummary>(overview.ExpensesByCategory);
+        
+        // Update available months only if they've changed
+        var newMonths = overview.AvailableMonths;
+        var currentMonths = AvailableMonths.Select(m => m.Date).ToList();
+        
+        if (!newMonths.SequenceEqual(currentMonths))
+        {
+            AvailableMonths.Clear();
+            foreach (var date in newMonths)
             {
-                CategoryName = g.Key,
-                Total = g.Sum(t => t.Amount)
-            })
-            .OrderByDescending(x => x.Total)
-            .ToList();
-
-        // Replace entire collection with single assignment
-        IncomeByCategory = new ObservableCollection<CategorySummary>(incomeGroups);
-        TotalIncome = incomeGroups.Sum(x => x.Total);
-
-        // Calculate expenses by category
-        var expenseGroups = transactions
-            .Where(t => t.Type == TransactionType.Expense)
-            .GroupBy(t => t.Category?.Name ?? "Okategoriserad")
-            .Select(g => new CategorySummary
-            {
-                CategoryName = g.Key,
-                Total = g.Sum(t => t.Amount)
-            })
-            .OrderByDescending(x => x.Total)
-            .ToList();
-
-        // Replace entire collection with single assignment
-        ExpensesByCategory = new ObservableCollection<CategorySummary>(expenseGroups);
-        TotalExpenses = expenseGroups.Sum(x => x.Total);
-
-        // Calculate net balance
-        NetBalance = TotalIncome - TotalExpenses;
+                AvailableMonths.Add(new MonthDisplay
+                {
+                    Date = date,
+                    DisplayName = FormatMonthYear(date)
+                });
+            }
+        }
     }
 
     private void CalculateExpectedMonthResult()
     {
-        var result = _calculationService.CalculateExpectedMonthResult(SelectedMonth, NetBalance);
+        var result = _calculationService.CalculateExpectedMonthResult(SelectedMonth);
         
         IsCurrentMonth = result.IsCurrentMonth;
+        IsPastMonth = result.IsPastMonth;
         ScheduledIncome = result.ScheduledIncome;
         ScheduledExpenses = result.ScheduledExpenses;
         ExpectedMonthResult = result.ProjectedNetBalance;
-    }
-
-    private void CalculateAccountBalance()
-    {
-        // Calculate account balance (all transactions, current balance)
-        var allTransactions = _transactionService.GetAllTransactions();
-
-        var totalIncome = allTransactions
-            .Where(t => t.Type == TransactionType.Income)
-            .Sum(t => t.Amount);
-
-        var totalExpenses = allTransactions
-            .Where(t => t.Type == TransactionType.Expense)
-            .Sum(t => t.Amount);
-
-        AccountBalance = totalIncome - totalExpenses;
-    }
-
-    private void PopulateAvailableMonths()
-    {
-        // Get all transactions
-        var allTransactions = _transactionService.GetAllTransactions();
-
-        if (!allTransactions.Any())
-        {
-            // If no transactions, add current month
-            var currentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-            AvailableMonths.Add(new MonthDisplay
-            {
-                Date = currentMonth,
-                DisplayName = FormatMonthYear(currentMonth)
-            });
-            return;
-        }
-
-        // Get distinct months from transactions
-        var distinctMonths = allTransactions
-            .Select(t => new DateTime(t.Date.Year, t.Date.Month, 1))
-            .Distinct()
-            .OrderByDescending(d => d)
-            .ToList();
-
-        // Add to collection
-        AvailableMonths.Clear();
-        foreach (var month in distinctMonths)
-        {
-            AvailableMonths.Add(new MonthDisplay
-            {
-                Date = month,
-                DisplayName = FormatMonthYear(month)
-            });
-        }
+        ExpectedAccountBalance = result.ExpectedAccountBalance;
+        ScheduledIncomeTransactions = new ObservableCollection<ScheduledTransactionSummary>(result.ScheduledIncomeTransactions);
+        ScheduledExpenseTransactions = new ObservableCollection<ScheduledTransactionSummary>(result.ScheduledExpenseTransactions);
     }
 
     private string FormatMonthYear(DateTime date)

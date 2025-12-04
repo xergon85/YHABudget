@@ -15,201 +15,316 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="30">
-            <TextBlock Text="Översikt"
-                       Style="{StaticResource SectionHeaderStyle}"/>
+            <Grid Margin="0,0,0,20">
+                <TextBlock Text="Översikt"
+                           Style="{StaticResource SectionHeaderStyle}"/>
+                <!-- Month Selector -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="Månad:"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"
+                               FontSize="14"/>
+                    <ComboBox Width="180"
+                              Height="32"
+                              ItemsSource="{Binding AvailableMonths}"
+                              SelectedValue="{Binding SelectedMonth, Mode=TwoWay}"
+                              SelectedValuePath="Date"
+                              DisplayMemberPath="DisplayName"
+                              IsSynchronizedWithCurrentItem="False"
+                              MaxDropDownHeight="300"
+                              VerticalContentAlignment="Center"/>
+                </StackPanel>
+            </Grid>
 
-            <!-- Account Balance - Standalone -->
+            <!-- Account Balance -->
             <Border Background="{StaticResource SurfaceBrush}"
                     BorderBrush="{StaticResource PrimaryBrush}"
                     BorderThickness="2"
                     CornerRadius="4"
                     Padding="20"
-                    Margin="0,0,0,30">
-                <Grid>
-                    <TextBlock Text="Kontosaldo"
-                               FontSize="22"
-                               FontWeight="Bold"/>
-                    <TextBlock Text="{Binding AccountBalance, StringFormat='{}{0:N0} kr'}"
-                               HorizontalAlignment="Right"
-                               FontSize="28"
-                               FontWeight="Bold"
-                               Foreground="{StaticResource PrimaryBrush}"/>
-                </Grid>
-            </Border>
-
-            <!-- Month Selector -->
-            <StackPanel Orientation="Horizontal"
-                        Margin="0,0,0,20">
-                <TextBlock Text="Månad:"
-                           VerticalAlignment="Center"
-                           Margin="0,0,10,0"
-                           FontSize="14"/>
-                <ComboBox Width="200"
-                          Height="30"
-                          ItemsSource="{Binding AvailableMonths}"
-                          SelectedValue="{Binding SelectedMonth}"
-                          SelectedValuePath="Date"
-                          DisplayMemberPath="DisplayName"
-                          MaxDropDownHeight="300"
-                          VerticalContentAlignment="Center"/>
-            </StackPanel>
-
-            <!-- Summary Card -->
-            <Border Style="{StaticResource CardStyle}">
+                    Margin="0,0,0,20">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Income Section -->
-                    <StackPanel Grid.Row="0"
-                                Margin="0,0,0,20">
-                        <TextBlock Text="Inkomster"
+                    <Grid Grid.Row="0">
+                        <TextBlock Text="Kontosaldo"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding AccountBalance, StringFormat='{}{0:N0} kr'}"
+                                   HorizontalAlignment="Right"
+                                   FontSize="32"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource PrimaryBrush}"/>
+                    </Grid>
+
+                    <!-- Expected balance for current month -->
+                    <Grid Grid.Row="1"
+                          Margin="0,8,0,0"
+                          Visibility="{Binding IsCurrentMonth, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="Förväntat saldo vid månadens slut"
+                                   FontSize="14"
+                                   FontStyle="Italic"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding ExpectedAccountBalance, StringFormat='{}{0:N0} kr'}"
+                                   HorizontalAlignment="Right"
                                    FontSize="18"
                                    FontWeight="SemiBold"
-                                   Foreground="{StaticResource IncomeBrush}"
-                                   Margin="0,0,0,10"/>
-                        <ItemsControl ItemsSource="{Binding IncomeByCategory}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,5">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0"
-                                                   Text="{Binding CategoryName}"
-                                                   Margin="10,0,0,0"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Total, StringFormat='{}{0:N0} kr'}"
-                                                   Foreground="{StaticResource IncomeBrush}"
-                                                   FontWeight="SemiBold"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Separator Margin="0,10"/>
-                        <Grid>
-                            <TextBlock Text="Totala inkomster"
-                                       FontWeight="Bold"/>
-                            <TextBlock Text="{Binding TotalIncome, StringFormat='+ {0:N0} kr'}"
-                                       HorizontalAlignment="Right"
+                                   FontStyle="Italic"
+                                   Foreground="{Binding ExpectedAccountBalance, Converter={StaticResource DecimalToBrushConverter}}"/>
+                    </Grid>
+
+                    <!-- Actual balance at month end for past months -->
+                    <Grid Grid.Row="2"
+                          Margin="0,8,0,0"
+                          Visibility="{Binding IsPastMonth, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="Saldo vid månadens slut"
+                                   FontSize="14"
+                                   FontStyle="Italic"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding ExpectedAccountBalance, StringFormat='{}{0:N0} kr'}"
+                                   HorizontalAlignment="Right"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   FontStyle="Italic"
+                                   Foreground="{Binding ExpectedAccountBalance, Converter={StaticResource DecimalToBrushConverter}}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Main Summary Card -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <!-- Income and Expenses in Two Columns -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Income Column -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Inkomster"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
                                        Foreground="{StaticResource IncomeBrush}"
-                                       FontWeight="Bold"
-                                       FontSize="16"/>
-                        </Grid>
-                    </StackPanel>
+                                       Margin="0,0,0,8"/>
+                            <ItemsControl ItemsSource="{Binding IncomeByCategory}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,3">
+                                            <TextBlock Text="{Binding CategoryName}"
+                                                       FontSize="13"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding Total, StringFormat='{}{0:N0} kr'}"
+                                                       HorizontalAlignment="Right"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Separator Margin="0,8"/>
+                            <Grid>
+                                <TextBlock Text="Totalt"
+                                           FontWeight="Bold"
+                                           FontSize="14"/>
+                                <TextBlock Text="{Binding TotalIncome, StringFormat='+ {0:N0} kr'}"
+                                           HorizontalAlignment="Right"
+                                           Foreground="{StaticResource IncomeBrush}"
+                                           FontWeight="Bold"
+                                           FontSize="15"/>
+                            </Grid>
 
-                    <!-- Expenses Section -->
-                    <StackPanel Grid.Row="1"
-                                Margin="0,0,0,20">
-                        <TextBlock Text="Utgifter"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource ExpenseBrush}"
-                                   Margin="0,0,0,10"/>
-                        <ItemsControl ItemsSource="{Binding ExpensesByCategory}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,5">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0"
-                                                   Text="{Binding CategoryName}"
-                                                   Margin="10,0,0,0"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Total, StringFormat='{}{0:N0} kr'}"
-                                                   Foreground="{StaticResource ExpenseBrush}"
-                                                   FontWeight="SemiBold"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Separator Margin="0,10"/>
-                        <Grid>
-                            <TextBlock Text="Totala utgifter"
-                                       FontWeight="Bold"/>
-                            <TextBlock Text="{Binding TotalExpenses, StringFormat='- {0:N0} kr'}"
-                                       HorizontalAlignment="Right"
+                            <!-- Scheduled Income -->
+                            <StackPanel Margin="0,12,0,0"
+                                        Visibility="{Binding IsCurrentMonth, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Text="Kommande"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           FontStyle="Italic"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,0,0,4"/>
+                                <ItemsControl ItemsSource="{Binding ScheduledIncomeTransactions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,2">
+                                                <TextBlock FontSize="12"
+                                                           Foreground="{StaticResource TextSecondaryBrush}">
+                                                    <Run Text="{Binding Description, Mode=OneWay}"/>
+                                                    <Run Text="·"
+                                                         Foreground="{StaticResource DividerBrush}"/>
+                                                    <Run Text="{Binding Date, StringFormat='d MMM', Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding Amount, StringFormat='{}{0:N0} kr'}"
+                                                           HorizontalAlignment="Right"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource IncomeBrush}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Grid Margin="0,4,0,0">
+                                    <TextBlock Text="Summa kommande"
+                                               FontSize="12"
+                                               FontStyle="Italic"/>
+                                    <TextBlock Text="{Binding ScheduledIncome, StringFormat='+ {0:N0} kr'}"
+                                               HorizontalAlignment="Right"
+                                               FontSize="12"
+                                               FontStyle="Italic"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource IncomeBrush}"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Expenses Column -->
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Utgifter"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
                                        Foreground="{StaticResource ExpenseBrush}"
-                                       FontWeight="Bold"
-                                       FontSize="16"/>
-                        </Grid>
-                    </StackPanel>
+                                       Margin="0,0,0,8"/>
+                            <ItemsControl ItemsSource="{Binding ExpensesByCategory}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,3">
+                                            <TextBlock Text="{Binding CategoryName}"
+                                                       FontSize="13"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding Total, StringFormat='{}{0:N0} kr'}"
+                                                       HorizontalAlignment="Right"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Separator Margin="0,8"/>
+                            <Grid>
+                                <TextBlock Text="Totalt"
+                                           FontWeight="Bold"
+                                           FontSize="14"/>
+                                <TextBlock Text="{Binding TotalExpenses, StringFormat='- {0:N0} kr'}"
+                                           HorizontalAlignment="Right"
+                                           Foreground="{StaticResource ExpenseBrush}"
+                                           FontWeight="Bold"
+                                           FontSize="15"/>
+                            </Grid>
 
-                    <!-- Net Balance -->
-                    <Border Grid.Row="2"
-                            Background="{StaticResource PrimaryLightBrush}"
+                            <!-- Scheduled Expenses -->
+                            <StackPanel Margin="0,12,0,0"
+                                        Visibility="{Binding IsCurrentMonth, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Text="Kommande"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           FontStyle="Italic"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,0,0,4"/>
+                                <ItemsControl ItemsSource="{Binding ScheduledExpenseTransactions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,2">
+                                                <TextBlock FontSize="12"
+                                                           Foreground="{StaticResource TextSecondaryBrush}">
+                                                    <Run Text="{Binding Description, Mode=OneWay}"/>
+                                                    <Run Text="·"
+                                                         Foreground="{StaticResource DividerBrush}"/>
+                                                    <Run Text="{Binding Date, StringFormat='d MMM', Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding Amount, StringFormat='{}{0:N0} kr'}"
+                                                           HorizontalAlignment="Right"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource ExpenseBrush}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Grid Margin="0,4,0,0">
+                                    <TextBlock Text="Summa kommande"
+                                               FontSize="12"
+                                               FontStyle="Italic"/>
+                                    <TextBlock Text="{Binding ScheduledExpenses, StringFormat='- {0:N0} kr'}"
+                                               HorizontalAlignment="Right"
+                                               FontSize="12"
+                                               FontStyle="Italic"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource ExpenseBrush}"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Expected Month Result (only for current month) -->
+                    <Border Background="{StaticResource PrimaryLightBrush}"
                             CornerRadius="4"
-                            Padding="15">
+                            Padding="15"
+                            Visibility="{Binding IsCurrentMonth, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Grid>
-                            <TextBlock Text="Netto denna månad"
-                                       FontSize="18"
-                                       FontWeight="Bold"/>
-                            <TextBlock Text="{Binding NetBalance, StringFormat='{}{0:N0} kr'}"
-                                       HorizontalAlignment="Right"
-                                       FontSize="22"
+                            <TextBlock Text="Förväntat månadsresultat"
+                                       FontSize="16"
                                        FontWeight="Bold"
-                                       Foreground="{Binding NetBalance, Converter={StaticResource DecimalToBrushConverter}}"/>
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ExpectedMonthResult, StringFormat='{}{0:N0} kr'}"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       FontSize="24"
+                                       FontWeight="Bold"
+                                       Foreground="{Binding ExpectedMonthResult, Converter={StaticResource DecimalToBrushConverter}}"/>
                         </Grid>
                     </Border>
 
-                    <!-- Expected Month Result (only for current month) -->
-                    <Border Grid.Row="3"
-                            Background="{StaticResource PrimaryLightBrush}"
+                    <!-- Actual Month Result (only for past months) -->
+                    <Border Background="{StaticResource PrimaryLightBrush}"
                             CornerRadius="4"
                             Padding="15"
-                            Margin="0,15,0,0"
-                            Visibility="{Binding IsCurrentMonth, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <StackPanel>
-                            <TextBlock Text="Förväntat månadsresultat"
-                                       FontSize="18"
-                                       FontWeight="Bold"
-                                       Margin="0,0,0,10"/>
-                            
-                            <!-- Scheduled Transactions Details -->
-                            <Grid Margin="0,0,0,5">
-                                <TextBlock Text="Inplanerade inkomster"
-                                           FontSize="14"
-                                           Foreground="{StaticResource IncomeBrush}"/>
-                                <TextBlock Text="{Binding ScheduledIncome, StringFormat='+ {0:N0} kr'}"
-                                           HorizontalAlignment="Right"
-                                           FontSize="14"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource IncomeBrush}"/>
-                            </Grid>
-                            <Grid Margin="0,0,0,10">
-                                <TextBlock Text="Inplanerade utgifter"
-                                           FontSize="14"
-                                           Foreground="{StaticResource ExpenseBrush}"/>
-                                <TextBlock Text="{Binding ScheduledExpenses, StringFormat='- {0:N0} kr'}"
-                                           HorizontalAlignment="Right"
-                                           FontSize="14"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource ExpenseBrush}"/>
-                            </Grid>
-                            
-                            <Separator Margin="0,5"/>
-                            
-                            <!-- Expected Result -->
-                            <Grid Margin="0,10,0,0">
-                                <TextBlock Text="Förväntat netto vid månadsslutet"
+                            Visibility="{Binding IsPastMonth, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <TextBlock Text="Månadsresultat"
                                            FontSize="16"
-                                           FontWeight="Bold"/>
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding ExpectedMonthResult, StringFormat='{}{0:N0} kr'}"
                                            HorizontalAlignment="Right"
-                                           FontSize="20"
+                                           VerticalAlignment="Center"
+                                           FontSize="24"
                                            FontWeight="Bold"
                                            Foreground="{Binding ExpectedMonthResult, Converter={StaticResource DecimalToBrushConverter}}"/>
                             </Grid>
-                        </StackPanel>
+
+                            <Grid Grid.Row="1"
+                                  Margin="0,8,0,0">
+                                <TextBlock Text="Saldo vid månadens slut"
+                                           FontSize="14"
+                                           FontStyle="Italic"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding ExpectedAccountBalance, StringFormat='{}{0:N0} kr'}"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           FontStyle="Italic"
+                                           Foreground="{Binding ExpectedAccountBalance, Converter={StaticResource DecimalToBrushConverter}}"/>
+                            </Grid>
+                        </Grid>
                     </Border>
-                </Grid>
+                </StackPanel>
             </Border>
         </StackPanel>
     </ScrollViewer>

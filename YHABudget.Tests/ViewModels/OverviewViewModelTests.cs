@@ -25,7 +25,7 @@ public class OverviewViewModelTests : IDisposable
         var recurringTransactionService = new RecurringTransactionService(_context);
         var calculationService = new CalculationService(_context);
 
-        _viewModel = new OverviewViewModel(transactionService, recurringTransactionService, calculationService);
+        _viewModel = new OverviewViewModel(recurringTransactionService, calculationService);
     }
 
     [Fact]
@@ -282,7 +282,7 @@ public class OverviewViewModelTests : IDisposable
         var transactionService = new TransactionService(_context);
         var recurringTransactionService = new RecurringTransactionService(_context);
         var calculationService = new CalculationService(_context);
-        var viewModel = new OverviewViewModel(transactionService, recurringTransactionService, calculationService);
+        var viewModel = new OverviewViewModel(recurringTransactionService, calculationService);
 
         // Assert - Total income (70000) - Total expenses (27000) = 43000
         Assert.Equal(43000m, viewModel.AccountBalance);
@@ -326,7 +326,7 @@ public class OverviewViewModelTests : IDisposable
         var transactionService = new TransactionService(_context);
         var recurringTransactionService = new RecurringTransactionService(_context);
         var calculationService = new CalculationService(_context);
-        var viewModel = new OverviewViewModel(transactionService, recurringTransactionService, calculationService);
+        var viewModel = new OverviewViewModel(recurringTransactionService, calculationService);
 
         var initialBalance = viewModel.AccountBalance;
 

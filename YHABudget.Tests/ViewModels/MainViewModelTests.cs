@@ -35,7 +35,7 @@ public class MainViewModelTests : IDisposable
         _mockDialogService = new Mock<IDialogService>();
         
         // Create child ViewModels
-        _overviewViewModel = new OverviewViewModel(_transactionService, _recurringTransactionService, _calculationService);
+        _overviewViewModel = new OverviewViewModel(_recurringTransactionService, _calculationService);
         _transactionViewModel = new TransactionViewModel(_transactionService, _categoryService, _recurringTransactionService, _mockDialogService.Object);
         _recurringTransactionViewModel = new RecurringTransactionViewModel(_recurringTransactionService, _mockDialogService.Object);
         _settingsViewModel = new SettingsViewModel();
@@ -122,7 +122,7 @@ public class MainViewModelTests : IDisposable
         };
 
         // Act
-        mainViewModel.CurrentViewModel = new OverviewViewModel(_transactionService, _recurringTransactionService, _calculationService);
+        mainViewModel.CurrentViewModel = new OverviewViewModel(_recurringTransactionService, _calculationService);
 
         // Assert
         Assert.True(propertyChangedRaised);
