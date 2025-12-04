@@ -1,31 +1,24 @@
 using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
 using YHABudget.Core.Services;
 using YHABudget.Core.ViewModels;
 using YHABudget.Data.Models;
-using YHABudget.Data.Services;
 using YHABudget.WPF.Dialogs;
 
 namespace YHABudget.WPF.Services;
 
 public class DialogService : IDialogService
 {
-    private readonly ICategoryService _categoryService;
-    private readonly ITransactionService _transactionService;
-    private readonly IRecurringTransactionService _recurringTransactionService;
+    private readonly IServiceProvider _serviceProvider;
 
-    public DialogService(
-        ICategoryService categoryService,
-        ITransactionService transactionService,
-        IRecurringTransactionService recurringTransactionService)
+    public DialogService(IServiceProvider serviceProvider)
     {
-        _categoryService = categoryService;
-        _transactionService = transactionService;
-        _recurringTransactionService = recurringTransactionService;
+        _serviceProvider = serviceProvider;
     }
 
     public bool? ShowTransactionDialog(Transaction? transaction = null)
     {
-        var viewModel = new TransactionDialogViewModel(_categoryService, _transactionService);
+        var viewModel = _serviceProvider.GetRequiredService<TransactionDialogViewModel>();
 
         if (transaction != null)
         {
@@ -43,7 +36,7 @@ public class DialogService : IDialogService
 
     public bool? ShowRecurringTransactionDialog(RecurringTransaction? recurringTransaction = null)
     {
-        var viewModel = new RecurringTransactionDialogViewModel(_categoryService, _recurringTransactionService);
+        var viewModel = _serviceProvider.GetRequiredService<RecurringTransactionDialogViewModel>();
 
         if (recurringTransaction != null)
         {
