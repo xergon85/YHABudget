@@ -19,7 +19,7 @@ public class MainViewModelTests : IDisposable
     private readonly OverviewViewModel _overviewViewModel;
     private readonly TransactionViewModel _transactionViewModel;
     private readonly RecurringTransactionViewModel _recurringTransactionViewModel;
-    private readonly SettingsViewModel _settingsViewModel;
+    private readonly SalaryViewModel _salaryViewModel;
 
     public MainViewModelTests()
     {
@@ -38,14 +38,14 @@ public class MainViewModelTests : IDisposable
         _overviewViewModel = new OverviewViewModel(_recurringTransactionService, _calculationService);
         _transactionViewModel = new TransactionViewModel(_transactionService, _categoryService, _recurringTransactionService, _mockDialogService.Object);
         _recurringTransactionViewModel = new RecurringTransactionViewModel(_recurringTransactionService, _mockDialogService.Object);
-        _settingsViewModel = new SettingsViewModel();
+        _salaryViewModel = new SalaryViewModel();
     }
 
     [Fact]
     public void Constructor_InitializesWithOverviewAsCurrentViewModel()
     {
         // Arrange & Act
-        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _settingsViewModel);
+        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _salaryViewModel);
 
         // Assert
         Assert.NotNull(mainViewModel.CurrentViewModel);
@@ -56,7 +56,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToOverviewCommand_ChangesCurrentViewModelToOverview()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _settingsViewModel);
+        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _salaryViewModel);
         mainViewModel.CurrentViewModel = null; // Set to null to test navigation
 
         // Act
@@ -71,7 +71,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToRecurringTransactionsCommand_ChangesCurrentViewModelToRecurringTransactions()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _settingsViewModel);
+        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _salaryViewModel);
 
         // Act
         mainViewModel.NavigateToTransactionsCommand.Execute(null);
@@ -85,7 +85,7 @@ public class MainViewModelTests : IDisposable
     public void NavigateToRecurringCommand_ChangesCurrentViewModelToRecurring()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _settingsViewModel);
+        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _salaryViewModel);
 
         // Act
         mainViewModel.NavigateToRecurringCommand.Execute(null);
@@ -96,24 +96,24 @@ public class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void NavigateToSettingsCommand_ChangesCurrentViewModelToSettings()
+    public void NavigateToSalaryCommand_ChangesCurrentViewModelToSalary()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _settingsViewModel);
+        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _salaryViewModel);
 
         // Act
-        mainViewModel.NavigateToSettingsCommand.Execute(null);
+        mainViewModel.NavigateToSalaryCommand.Execute(null);
 
         // Assert
         Assert.NotNull(mainViewModel.CurrentViewModel);
-        Assert.IsType<SettingsViewModel>(mainViewModel.CurrentViewModel);
+        Assert.IsType<SalaryViewModel>(mainViewModel.CurrentViewModel);
     }
 
     [Fact]
     public void CurrentViewModel_WhenChanged_RaisesPropertyChangedEvent()
     {
         // Arrange
-        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _settingsViewModel);
+        var mainViewModel = new MainViewModel(_recurringTransactionService, _overviewViewModel, _transactionViewModel, _recurringTransactionViewModel, _salaryViewModel);
         bool propertyChangedRaised = false;
         mainViewModel.PropertyChanged += (sender, args) =>
         {

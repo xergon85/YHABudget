@@ -28,7 +28,7 @@ public static class DependencyInjection
         services.AddSingleton<OverviewViewModel>();
         services.AddSingleton<TransactionViewModel>();
         services.AddSingleton<RecurringTransactionViewModel>();
-        services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<SalaryViewModel>();
 
         // Register Dialog ViewModels (Transient - new instance per dialog)
         services.AddTransient<TransactionDialogViewModel>();

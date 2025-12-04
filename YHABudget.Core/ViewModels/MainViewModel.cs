@@ -13,20 +13,20 @@ public class MainViewModel : ViewModelBase
     private readonly OverviewViewModel _overviewViewModel;
     private readonly TransactionViewModel _transactionViewModel;
     private readonly RecurringTransactionViewModel _recurringTransactionViewModel;
-    private readonly SettingsViewModel _settingsViewModel;
+    private readonly SalaryViewModel _salaryViewModel;
 
     public MainViewModel(
         IRecurringTransactionService recurringTransactionService,
         OverviewViewModel overviewViewModel,
         TransactionViewModel transactionViewModel,
         RecurringTransactionViewModel recurringTransactionViewModel,
-        SettingsViewModel settingsViewModel)
+        SalaryViewModel salaryViewModel)
     {
         _recurringTransactionService = recurringTransactionService;
         _overviewViewModel = overviewViewModel;
         _transactionViewModel = transactionViewModel;
         _recurringTransactionViewModel = recurringTransactionViewModel;
-        _settingsViewModel = settingsViewModel;
+        _salaryViewModel = salaryViewModel;
 
         NavigateToOverviewCommand = new RelayCommand(() =>
         {
@@ -43,7 +43,7 @@ public class MainViewModel : ViewModelBase
             CurrentViewModel = _recurringTransactionViewModel;
             _recurringTransactionViewModel.LoadDataCommand.Execute(null);
         });
-        NavigateToSettingsCommand = new RelayCommand(() => CurrentViewModel = _settingsViewModel);
+        NavigateToSalaryCommand = new RelayCommand(() => CurrentViewModel = _salaryViewModel);
 
         // Process recurring transactions for current month on startup
         _recurringTransactionService.ProcessRecurringTransactionsForMonth(DateTime.Now);
@@ -60,5 +60,5 @@ public class MainViewModel : ViewModelBase
     public ICommand NavigateToOverviewCommand { get; }
     public ICommand NavigateToTransactionsCommand { get; }
     public ICommand NavigateToRecurringCommand { get; }
-    public ICommand NavigateToSettingsCommand { get; }
+    public ICommand NavigateToSalaryCommand { get; }
 }

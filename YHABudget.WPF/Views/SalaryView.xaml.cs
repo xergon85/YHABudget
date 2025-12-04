@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace YHABudget.WPF.Views;
 
-public partial class SettingsView : UserControl
+public partial class SalaryView : UserControl
 {
-    public SettingsView()
+    public SalaryView()
     {
         InitializeComponent();
     }

@@ -26,8 +26,8 @@
         <DataTemplate DataType="{x:Type vm:RecurringTransactionViewModel}">
             <views:RecurringTransactionView/>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
-            <views:SettingsView/>
+        <DataTemplate DataType="{x:Type vm:SalaryViewModel}">
+            <views:SalaryView/>
         </DataTemplate>
     </Window.Resources>
 
@@ -63,9 +63,9 @@
                         Style="{StaticResource NavigationButtonStyle}"
                         Command="{Binding NavigateToRecurringCommand}"/>
 
-                <Button Content="Inställningar"
+                <Button Content="Lön"
                         Style="{StaticResource NavigationButtonStyle}"
-                        Command="{Binding NavigateToSettingsCommand}"/>
+                        Command="{Binding NavigateToSalaryCommand}"/>
             </StackPanel>
         </Border>
 
