@@ -1,6 +1,7 @@
 using YHABudget.Data.Context;
 using YHABudget.Data.Enums;
 using YHABudget.Data.Models;
+using YHABudget.Data.Services.AbsenceCalculationStrategies;
 
 namespace YHABudget.Data.Services;
 
@@ -8,13 +9,13 @@ public class AbsenceService : IAbsenceService
 {
     private readonly BudgetDbContext _context;
     private readonly ISalarySettingsService _salarySettingsService;
-    private const decimal VAB_CAP_ANNUAL_INCOME = 410_000m; // 7.5 PBB (Prisbasbelopp)
-    private const decimal COMPENSATION_RATE = 0.80m; // 80% compensation
+    private readonly AbsenceCalculationStrategyFactory _strategyFactory;
 
     public AbsenceService(BudgetDbContext context, ISalarySettingsService salarySettingsService)
     {
         _context = context;
         _salarySettingsService = salarySettingsService;
+        _strategyFactory = new AbsenceCalculationStrategyFactory();
     }
 
     public Absence AddAbsence(Absence absence)
@@ -180,29 +181,8 @@ public class AbsenceService : IAbsenceService
         decimal annualIncome,
         decimal annualHours)
     {
-        if (annualHours <= 0)
-        {
-            return (0, 0, 0);
-        }
-
-        // Calculate daily income based on 160 hours per month
-        var monthlyIncome = (annualIncome / annualHours) * 160m;
-        var dailyIncome = monthlyIncome / 22m; // Approximate 22 working days per month
-
-        // Deduction is always 80% of actual salary (employee loses this from their pay)
-        decimal deduction = dailyIncome * COMPENSATION_RATE;
-
-        // Compensation is capped at 410,000 kr annual income
-        decimal compensationDailyIncome = dailyIncome;
-        if (annualIncome > VAB_CAP_ANNUAL_INCOME)
-        {
-            var cappedMonthlyIncome = (VAB_CAP_ANNUAL_INCOME / annualHours) * 160m;
-            compensationDailyIncome = cappedMonthlyIncome / 22m;
-        }
-
-        // Calculate 80% compensation based on capped income
-        decimal compensation = compensationDailyIncome * COMPENSATION_RATE;
-
-        return (dailyIncome, deduction, compensation);
+        // Use strategy pattern to get the appropriate calculation logic
+        var strategy = _strategyFactory.GetStrategy(type);
+        return strategy.Calculate(annualIncome, annualHours);
     }
 }
