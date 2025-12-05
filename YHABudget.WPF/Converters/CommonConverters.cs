@@ -119,3 +119,25 @@ public class RecurrenceTypeToVisibilityConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+public class RecurrenceTypeToSwedishConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is RecurrenceType recurrenceType)
+        {
+            return recurrenceType switch
+            {
+                RecurrenceType.Monthly => "Månadsvis",
+                RecurrenceType.Yearly => "Årligen",
+                _ => value.ToString() ?? string.Empty
+            };
+        }
+        return value?.ToString() ?? string.Empty;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

@@ -3,10 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:converters="clr-namespace:YHABudget.WPF.Converters"
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="1000"
              Background="{StaticResource BackgroundLightBrush}">
+    <UserControl.Resources>
+        <converters:RecurrenceTypeToSwedishConverter x:Key="RecurrenceTypeToSwedishConverter"/>
+    </UserControl.Resources>
     <Grid Margin="30">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -47,45 +51,17 @@
                               IsReadOnly="True"
                               SelectionMode="Single"
                               GridLinesVisibility="Horizontal"
+                              Background="Transparent"
                               HeadersVisibility="Column"
                               BorderThickness="0"
-                              RowHeight="45"
+                              RowHeight="50"
                               HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Disabled"
                               EnableRowVirtualization="False"
-                              MouseDoubleClick="DataGrid_MouseDoubleClick">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background"
-                                        Value="White"/>
-                                <Setter Property="FontWeight"
-                                        Value="SemiBold"/>
-                                <Setter Property="Padding"
-                                        Value="8"/>
-                                <Setter Property="BorderThickness"
-                                        Value="0,0,0,1"/>
-                                <Setter Property="BorderBrush"
-                                        Value="#E0E0E0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
-                        <DataGrid.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="BorderThickness"
-                                        Value="0"/>
-                                <Setter Property="Padding"
-                                        Value="8"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="DataGridCell">
-                                            <Border Padding="{TemplateBinding Padding}"
-                                                    Background="{TemplateBinding Background}">
-                                                <ContentPresenter VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </DataGrid.CellStyle>
+                              MouseDoubleClick="DataGrid_MouseDoubleClick"
+                              RowStyle="{StaticResource StandardDataGridRowStyle}"
+                              CellStyle="{StaticResource StandardDataGridCellStyle}"
+                              ColumnHeaderStyle="{StaticResource StandardDataGridColumnHeaderStyle}">
 
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Beskrivning"
@@ -122,7 +98,7 @@
                             </DataGridTextColumn>
 
                             <DataGridTextColumn Header="Återkommer"
-                                                Binding="{Binding RecurrenceType}"
+                                                Binding="{Binding RecurrenceType, Converter={StaticResource RecurrenceTypeToSwedishConverter}}"
                                                 Width="100"/>
 
                             <DataGridTemplateColumn Header="Status"
@@ -141,13 +117,13 @@
                                                     Width="50">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Content="🗑"
-                                                Width="24"
-                                                Height="24"
-                                                FontSize="12"
-                                                Command="{Binding DataContext.DeleteRecurringTransactionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        <Button Command="{Binding DataContext.DeleteRecurringTransactionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding Id}"
-                                                ToolTip="Ta bort"/>
+                                                Style="{StaticResource IconButtonDangerStyle}"
+                                                ToolTip="Ta bort">
+                                            <TextBlock Text="🗑️"
+                                                       FontSize="16"/>
+                                        </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
