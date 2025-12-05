@@ -22,10 +22,13 @@ public class CalculationService : ICalculationService
 
     public decimal CalculateMonthlyIncome(decimal annualIncome, decimal annualHours)
     {
-        if (annualIncome <= 0)
+        if (annualIncome <= 0 || annualHours <= 0)
             return 0m;
 
-        return annualIncome / 12m;
+        // Calculate hourly rate and multiply by average monthly hours (160 hours = 40h/week * 4 weeks)
+        decimal hourlyRate = annualIncome / annualHours;
+        decimal monthlyHours = 160m; // Standard monthly working hours
+        return hourlyRate * monthlyHours;
     }
 
     public async Task<List<Transaction>> GenerateTransactionsFromRecurring(DateTime month)
