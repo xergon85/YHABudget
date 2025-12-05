@@ -183,6 +183,6 @@ public class AbsenceService : IAbsenceService
     {
         // Use strategy pattern to get the appropriate calculation logic
         var strategy = _strategyFactory.GetStrategy(type);
-        return strategy.Calculate(annualIncome, annualHours);
+        return strategy.Calculate(_context, date, annualIncome, annualHours);
     }
 }

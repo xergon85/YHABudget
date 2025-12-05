@@ -1,10 +1,11 @@
+using YHABudget.Data.Context;
 using YHABudget.Data.Enums;
 
 namespace YHABudget.Data.Services.AbsenceCalculationStrategies;
 
 /// <summary>
 /// Calculation strategy for VAB (Vård av barn - Care of sick child)
-/// - Same calculation as sick leave since both are capped at 410,000 kr/year
+/// - No karensdag for VAB (always compensated)
 /// - Deduction: 80% of actual salary
 /// - Compensation: 80% of capped salary at 410,000 kr/year (7.5 PBB)
 /// </summary>
@@ -16,6 +17,8 @@ public class VABCalculationStrategy : IAbsenceCalculationStrategy
     public AbsenceType AbsenceType => AbsenceType.VAB;
 
     public (decimal DailyIncome, decimal Deduction, decimal Compensation) Calculate(
+        BudgetDbContext context,
+        DateTime date,
         decimal annualIncome, 
         decimal annualHours)
     {

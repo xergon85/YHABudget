@@ -354,6 +354,17 @@ public class AbsenceServiceTests : IDisposable
         var standardHours = 2080m; // Full-time annual hours
         var testDate = new DateTime(2025, 12, 5);
         
+        // Add a previous sick day so this is not treated as karensdag
+        _context.Absences.Add(new Absence
+        {
+            Date = testDate.AddDays(-1),
+            Type = AbsenceType.Sick,
+            DailyIncome = 1000m,
+            Deduction = 800m,
+            Compensation = 800m
+        });
+        _context.SaveChanges();
+        
         // Act - Calculate for both salaries
         var (dailyIncome1M, deduction1M, compensation1M) = _absenceService.CalculateAbsenceImpact(
             testDate, 
@@ -384,6 +395,85 @@ public class AbsenceServiceTests : IDisposable
         var expectedCompensation = expectedCappedDaily * 0.80m;
         Assert.Equal(expectedCompensation, compensation1M);
         Assert.Equal(expectedCompensation, compensation500k);
+    }
+
+    [Fact]
+    public void CalculateAbsenceImpact_FirstSickDay_KarensdagHasNoCompensation()
+    {
+        // Arrange - First sick day (karensdag/waiting day)
+        var salary = 500_000m;
+        var standardHours = 2080m;
+        var firstSickDay = new DateTime(2025, 12, 5);
+        
+        // Act - Calculate for first sick day (no previous sick leave)
+        var (dailyIncome, deduction, compensation) = _absenceService.CalculateAbsenceImpact(
+            firstSickDay, 
+            AbsenceType.Sick, 
+            salary, 
+            standardHours);
+        
+        // Assert - Karensdag: Full deduction (100%), no compensation
+        Assert.True(dailyIncome > 0);
+        Assert.Equal(dailyIncome, deduction); // Full deduction = 100% of daily income
+        Assert.Equal(0m, compensation);
+    }
+
+    [Fact]
+    public void CalculateAbsenceImpact_SecondSickDay_HasCompensation()
+    {
+        // Arrange - Add first sick day
+        var salary = 500_000m;
+        var standardHours = 2080m;
+        var firstSickDay = new DateTime(2025, 12, 5);
+        var secondSickDay = new DateTime(2025, 12, 6);
+        
+        // Calculate expected values for second day
+        var monthlyIncome = (salary / standardHours) * 160m;
+        var dailyIncome = monthlyIncome / 22m;
+        var expectedDeduction = dailyIncome * 0.80m; // 80% on non-karensdag days
+        
+        _context.Absences.Add(new Absence
+        {
+            Date = firstSickDay,
+            Type = AbsenceType.Sick,
+            DailyIncome = dailyIncome,
+            Deduction = dailyIncome, // 100% deduction on first day
+            Compensation = 0m // First day has no compensation
+        });
+        _context.SaveChanges();
+        
+        // Act - Calculate for second sick day
+        var (actualDailyIncome, deduction, compensation) = _absenceService.CalculateAbsenceImpact(
+            secondSickDay, 
+            AbsenceType.Sick, 
+            salary, 
+            standardHours);
+        
+        // Assert - Second day: 80% deduction, 80% compensation (not karensdag anymore)
+        Assert.True(actualDailyIncome > 0);
+        Assert.Equal(expectedDeduction, deduction);
+        Assert.True(compensation > 0);
+    }
+
+    [Fact]
+    public void CalculateAbsenceImpact_VAB_AlwaysHasCompensation()
+    {
+        // Arrange - VAB has no karensdag
+        var salary = 500_000m;
+        var standardHours = 2080m;
+        var vabDay = new DateTime(2025, 12, 5);
+        
+        // Act - Calculate for VAB (no previous VAB days)
+        var (dailyIncome, deduction, compensation) = _absenceService.CalculateAbsenceImpact(
+            vabDay, 
+            AbsenceType.VAB, 
+            salary, 
+            standardHours);
+        
+        // Assert - VAB always has compensation (no karensdag)
+        Assert.True(dailyIncome > 0);
+        Assert.True(deduction > 0);
+        Assert.True(compensation > 0);
     }
 
     public void Dispose()
