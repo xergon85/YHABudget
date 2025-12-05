@@ -42,11 +42,11 @@ public class OverviewViewModel : ViewModelBase
         _scheduledIncomeTransactions = new ObservableCollection<ScheduledTransactionSummary>();
         _scheduledExpenseTransactions = new ObservableCollection<ScheduledTransactionSummary>();
 
-        LoadDataCommand = new RelayCommand(() => LoadData());
+        LoadDataCommand = new RelayCommand(() => RefreshData());
 
         // Set selected month to current month initially
         _selectedMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-        
+
         // Load data (this populates AvailableMonths)
         LoadData();
         CalculateExpectedMonthResult();
@@ -59,10 +59,7 @@ public class OverviewViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedMonth, value))
             {
-                // Process recurring transactions for the new month
-                _recurringTransactionService.ProcessRecurringTransactionsForMonth(value);
-                LoadData();
-                CalculateExpectedMonthResult();
+                RefreshData();
             }
         }
     }
@@ -162,18 +159,18 @@ public class OverviewViewModel : ViewModelBase
     private void LoadData()
     {
         var overview = _calculationService.GetMonthOverview(SelectedMonth);
-        
+
         TotalIncome = overview.TotalIncome;
         TotalExpenses = overview.TotalExpenses;
         NetBalance = overview.NetBalance;
         AccountBalance = overview.AccountBalance;
         IncomeByCategory = new ObservableCollection<CategorySummary>(overview.IncomeByCategory);
         ExpensesByCategory = new ObservableCollection<CategorySummary>(overview.ExpensesByCategory);
-        
+
         // Update available months only if they've changed
         var newMonths = overview.AvailableMonths;
         var currentMonths = AvailableMonths.Select(m => m.Date).ToList();
-        
+
         if (!newMonths.SequenceEqual(currentMonths))
         {
             AvailableMonths.Clear();
@@ -188,10 +185,18 @@ public class OverviewViewModel : ViewModelBase
         }
     }
 
+    private void RefreshData()
+    {
+        // Process recurring transactions for the current month, then reload data
+        _recurringTransactionService.ProcessRecurringTransactionsForMonth(SelectedMonth);
+        LoadData();
+        CalculateExpectedMonthResult();
+    }
+
     private void CalculateExpectedMonthResult()
     {
         var result = _calculationService.CalculateExpectedMonthResult(SelectedMonth);
-        
+
         IsCurrentMonth = result.IsCurrentMonth;
         IsPastMonth = result.IsPastMonth;
         ScheduledIncome = result.ScheduledIncome;

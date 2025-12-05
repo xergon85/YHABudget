@@ -405,4 +405,42 @@ public class CalculationServiceExpectedMonthTests : IDisposable
         Assert.Equal(2, result.ScheduledIncomeTransactions.Count);
         Assert.Single(result.ScheduledExpenseTransactions);
     }
+
+    [Fact]
+    public void CalculateExpectedMonthResult_RecurringTransactionStartingMidMonth_ShowsInScheduled()
+    {
+        // Arrange - Simulate December 5th scenario with recurring starting on December 15th
+        var currentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        var startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 15);
+
+        var category = new Category { Id = 1, Name = "Streaming", Type = TransactionType.Expense };
+        _context.Categories.Add(category);
+
+        // Monthly recurring transaction starting on the 15th (future date this month)
+        _context.RecurringTransactions.Add(new RecurringTransaction
+        {
+            Id = 1,
+            Description = "Storytel",
+            Amount = 229m,
+            Type = TransactionType.Expense,
+            RecurrenceType = RecurrenceType.Monthly,
+            StartDate = startDate,
+            IsActive = true,
+            CategoryId = 1,
+            Category = category
+        });
+
+        _context.SaveChanges();
+
+        // Act
+        var result = _service.CalculateExpectedMonthResult(currentMonth);
+
+        // Assert
+        Assert.True(result.IsCurrentMonth);
+        Assert.Equal(229m, result.ScheduledExpenses);
+        Assert.Equal(-229m, result.ProjectedNetBalance); // 0 - 229
+        Assert.Single(result.ScheduledExpenseTransactions);
+        Assert.Equal("Storytel", result.ScheduledExpenseTransactions[0].Description);
+        Assert.Equal(229m, result.ScheduledExpenseTransactions[0].Amount);
+    }
 }

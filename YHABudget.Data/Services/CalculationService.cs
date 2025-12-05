@@ -284,6 +284,10 @@ public class CalculationService : ICalculationService
             if (!scheduledDate.HasValue)
                 continue;
 
+            // Skip if already processed for this month
+            if (TransactionAlreadyExistsForRecurring(recurring, currentMonth, monthEnd))
+                continue;
+
             var summary = CreateScheduledTransactionSummary(recurring, scheduledDate.Value);
             AddScheduledTransaction(summary, recurring.Type, ref scheduledIncome, ref scheduledExpenses,
                 scheduledIncomeTransactions, scheduledExpenseTransactions);
@@ -313,10 +317,23 @@ public class CalculationService : ICalculationService
             }
         }
 
-        if (!appliesToMonth || transactionDate <= DateTime.Today || transactionDate < recurring.StartDate.Date)
+        // Show the transaction if it applies to this month and started before or during this month
+        if (!appliesToMonth || transactionDate < recurring.StartDate.Date)
             return null;
 
         return transactionDate;
+    }
+
+    private bool TransactionAlreadyExistsForRecurring(RecurringTransaction recurring, DateTime monthStart, DateTime monthEnd)
+    {
+        return _context.Transactions
+            .Any(t => t.Description == recurring.Description &&
+                     t.Amount == recurring.Amount &&
+                     t.CategoryId == recurring.CategoryId &&
+                     t.Type == recurring.Type &&
+                     t.IsRecurring == true &&
+                     t.Date >= monthStart &&
+                     t.Date <= monthEnd);
     }
 
     private ScheduledTransactionSummary CreateScheduledTransactionSummary(RecurringTransaction recurring, DateTime date)
