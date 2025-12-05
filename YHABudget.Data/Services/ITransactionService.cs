@@ -10,6 +10,7 @@ public interface ITransactionService
     Transaction? GetTransactionById(int id);
     IEnumerable<Transaction> GetTransactionsByMonth(DateTime month);
     IEnumerable<Transaction> GetTransactionsByFilter(TransactionType? type, int? categoryId, DateTime? month);
+    IEnumerable<DateTime> GetMonthsWithTransactions();
     void UpdateTransaction(Transaction transaction);
     void DeleteTransaction(int id);
 }

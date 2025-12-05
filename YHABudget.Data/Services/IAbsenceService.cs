@@ -8,6 +8,7 @@ public interface IAbsenceService
     Absence AddAbsence(Absence absence);
     IEnumerable<Absence> GetAllAbsences();
     IEnumerable<Absence> GetAbsencesForMonth(DateTime month);
+    IEnumerable<DateTime> GetMonthsWithAbsences();
     Absence? GetAbsenceById(int id);
     void UpdateAbsence(Absence absence);
     void DeleteAbsence(int id);

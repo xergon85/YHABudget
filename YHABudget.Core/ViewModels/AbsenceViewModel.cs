@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using YHABudget.Core.Commands;
+using YHABudget.Core.Helpers;
 using YHABudget.Core.MVVM;
 using YHABudget.Core.Services;
 using YHABudget.Data.Models;
@@ -15,7 +16,8 @@ public class AbsenceViewModel : ViewModelBase
     private readonly ISalarySettingsService _salarySettingsService;
 
     private ObservableCollection<Absence> _absences;
-    private DateTime _selectedMonth;
+    private DateTime? _selectedMonth;
+    private ObservableCollection<MonthOption> _availableMonths;
 
     public AbsenceViewModel(
         IAbsenceService absenceService, 
@@ -27,9 +29,13 @@ public class AbsenceViewModel : ViewModelBase
         _salarySettingsService = salarySettingsService;
 
         _absences = new ObservableCollection<Absence>();
-        _selectedMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        _selectedMonth = null;
+        _availableMonths = new ObservableCollection<MonthOption>();
+
+        InitializeMonths();
 
         LoadDataCommand = new RelayCommand(() => LoadData());
+        ClearFilterCommand = new RelayCommand(() => ClearFilter());
         AddAbsenceCommand = new RelayCommand(() => AddAbsence());
         EditAbsenceCommand = new RelayCommand<Absence>((absence) => EditAbsence(absence));
         DeleteAbsenceCommand = new RelayCommand<Absence>((absence) => DeleteAbsence(absence));
@@ -43,7 +49,13 @@ public class AbsenceViewModel : ViewModelBase
         private set => SetProperty(ref _absences, value);
     }
 
-    public DateTime SelectedMonth
+    public ObservableCollection<MonthOption> AvailableMonths
+    {
+        get => _availableMonths;
+        private set => SetProperty(ref _availableMonths, value);
+    }
+
+    public DateTime? SelectedMonth
     {
         get => _selectedMonth;
         set
@@ -56,18 +68,67 @@ public class AbsenceViewModel : ViewModelBase
     }
 
     public ICommand LoadDataCommand { get; }
+    public ICommand ClearFilterCommand { get; }
     public ICommand AddAbsenceCommand { get; }
     public ICommand EditAbsenceCommand { get; }
     public ICommand DeleteAbsenceCommand { get; }
 
+    private void InitializeMonths()
+    {
+        // Get months with absences from the service
+        var monthsWithAbsences = _absenceService.GetMonthsWithAbsences().ToList();
+
+        // Add current month if not present
+        var currentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        if (!monthsWithAbsences.Contains(currentMonth))
+        {
+            monthsWithAbsences.Add(currentMonth);
+            monthsWithAbsences = monthsWithAbsences.OrderByDescending(d => d).ToList();
+        }
+
+        AvailableMonths.Clear();
+        
+        // Add "Show All" option
+        AvailableMonths.Add(new MonthOption
+        {
+            Date = null,
+            DisplayText = "Visa alla"
+        });
+        
+        foreach (var month in monthsWithAbsences)
+        {
+            var isCurrentMonth = month == currentMonth;
+            var displayText = DateFormatHelper.FormatMonthYear(month);
+            AvailableMonths.Add(new MonthOption
+            {
+                Date = month,
+                DisplayText = isCurrentMonth ? $"★ {displayText}" : displayText
+            });
+        }
+
+        // Set selected month to null to show all by default
+        if (!_selectedMonth.HasValue || !monthsWithAbsences.Contains(_selectedMonth.Value))
+        {
+            _selectedMonth = null;
+        }
+    }
+
     private void LoadData()
     {
-        var absences = _absenceService.GetAbsencesForMonth(SelectedMonth);
+        var absences = _selectedMonth.HasValue 
+            ? _absenceService.GetAbsencesForMonth(_selectedMonth.Value)
+            : _absenceService.GetAllAbsences();
+            
         Absences.Clear();
         foreach (var absence in absences)
         {
             Absences.Add(absence);
         }
+    }
+
+    private void ClearFilter()
+    {
+        SelectedMonth = null;
     }
 
     private void AddAbsence()
@@ -77,6 +138,7 @@ public class AbsenceViewModel : ViewModelBase
         {
             var added = _absenceService.AddAbsence(result);
             Absences.Add(added);
+            InitializeMonths();
         }
     }
 
@@ -108,5 +170,12 @@ public class AbsenceViewModel : ViewModelBase
 
         _absenceService.DeleteAbsence(absence.Id);
         Absences.Remove(absence);
+        InitializeMonths();
+    }
+
+    public class MonthOption
+    {
+        public DateTime? Date { get; set; }
+        public string DisplayText { get; set; } = string.Empty;
     }
 }

@@ -35,6 +35,21 @@
                            Margin="0,0,0,15"/>
 
                 <StackPanel Orientation="Horizontal">
+                    <!-- Month Filter -->
+                    <TextBlock Text="Månad:"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"/>
+                    <ComboBox ItemsSource="{Binding AvailableMonths}"
+                              SelectedValue="{Binding SelectedMonthFilter, Mode=TwoWay}"
+                              SelectedValuePath="Date"
+                              DisplayMemberPath="DisplayText"
+                              Width="200"
+                              Height="36"
+                              FontSize="14"
+                              VerticalAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              Margin="0,0,20,0"/>
+
                     <!-- Category Filter -->
                     <TextBlock Text="Kategori:"
                                VerticalAlignment="Center"
@@ -45,15 +60,17 @@
                               SelectedValuePath="Id"
                               DisplayMemberPath="Name"
                               MaxDropDownHeight="300"
+                              Height="36"
+                              FontSize="14"
                               Margin="0,0,20,0"
+                              VerticalAlignment="Center"
                               VerticalContentAlignment="Center"
                               Padding="8,8,8,8"/>
 
                     <!-- Clear Filters Button -->
                     <Button Content="Rensa filter"
-                            Style="{StaticResource PrimaryButtonStyle}"
-                            Command="{Binding ClearFiltersCommand}"
-                            Padding="15,8"/>
+                            Style="{StaticResource FilterButtonStyle}"
+                            Command="{Binding ClearFiltersCommand}"/>
                 </StackPanel>
             </StackPanel>
         </Border>

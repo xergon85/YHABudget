@@ -113,6 +113,16 @@ public class AbsenceService : IAbsenceService
             .ToList();
     }
 
+    public IEnumerable<DateTime> GetMonthsWithAbsences()
+    {
+        return _context.Absences
+            .ToList()
+            .Select(a => new DateTime(a.Date.Year, a.Date.Month, 1))
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToList();
+    }
+
     public Absence? GetAbsenceById(int id)
     {
         return _context.Absences.Find(id);

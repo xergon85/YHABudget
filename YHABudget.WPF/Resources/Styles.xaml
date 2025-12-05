@@ -172,6 +172,16 @@
                 </Setter>
         </Style>
 
+        <!-- Filter Button Style (extends Secondary) -->
+        <Style x:Key="FilterButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="MinWidth"
+                        Value="120"/>
+                <Setter Property="Padding"
+                        Value="15,8"/>
+        </Style>
+
         <!-- Input TextBox Style -->
         <Style x:Key="InputTextBoxStyle"
                TargetType="TextBox">

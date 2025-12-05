@@ -46,6 +46,16 @@ public class TransactionService : ITransactionService
     {
         return _queries.GetTransactionsByFilter(type, categoryId, month);
     }
+
+    public IEnumerable<DateTime> GetMonthsWithTransactions()
+    {
+        var transactions = _context.Transactions.ToList();
+        return transactions
+            .Select(t => new DateTime(t.Date.Year, t.Date.Month, 1))
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToList();
+    }
     
     public void UpdateTransaction(Transaction transaction)
     {

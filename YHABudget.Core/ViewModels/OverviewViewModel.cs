@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Windows.Input;
 using YHABudget.Core.Commands;
+using YHABudget.Core.Helpers;
 using YHABudget.Core.MVVM;
 using YHABudget.Data.DTOs;
 using YHABudget.Data.Enums;
@@ -179,7 +179,7 @@ public class OverviewViewModel : ViewModelBase
                 AvailableMonths.Add(new MonthDisplay
                 {
                     Date = date,
-                    DisplayName = FormatMonthYear(date)
+                    DisplayName = DateFormatHelper.FormatMonthYear(date)
                 });
             }
         }
@@ -205,20 +205,5 @@ public class OverviewViewModel : ViewModelBase
         ExpectedAccountBalance = result.ExpectedAccountBalance;
         ScheduledIncomeTransactions = new ObservableCollection<ScheduledTransactionSummary>(result.ScheduledIncomeTransactions);
         ScheduledExpenseTransactions = new ObservableCollection<ScheduledTransactionSummary>(result.ScheduledExpenseTransactions);
-    }
-
-    private string FormatMonthYear(DateTime date)
-    {
-        // Format as "November 2025" with Swedish culture
-        var culture = new CultureInfo("sv-SE");
-        var formatted = date.ToString("MMMM yyyy", culture);
-
-        // Capitalize first letter
-        if (!string.IsNullOrEmpty(formatted))
-        {
-            formatted = char.ToUpper(formatted[0]) + formatted.Substring(1);
-        }
-
-        return formatted;
     }
 }

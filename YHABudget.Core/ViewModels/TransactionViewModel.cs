@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using YHABudget.Core.Commands;
+using YHABudget.Core.Helpers;
 using YHABudget.Core.MVVM;
 using YHABudget.Core.Services;
 using YHABudget.Data.Enums;
@@ -17,8 +18,8 @@ public class TransactionViewModel : ViewModelBase
     private readonly IDialogService _dialogService;
 
     private ObservableCollection<Transaction> _transactions;
-    private ObservableCollection<Category> _categories;
-    private List<Transaction> _allTransactions = new();
+    private ObservableCollection<CategoryOption> _categories;
+    private ObservableCollection<MonthOption> _availableMonths;
     private TransactionType? _selectedTypeFilter;
     private int? _selectedCategoryFilter;
     private DateTime? _selectedMonthFilter;
@@ -33,7 +34,8 @@ public class TransactionViewModel : ViewModelBase
         _dialogService = dialogService;
 
         _transactions = new ObservableCollection<Transaction>();
-        _categories = new ObservableCollection<Category>();
+        _categories = new ObservableCollection<CategoryOption>();
+        _availableMonths = new ObservableCollection<MonthOption>();
 
         LoadDataCommand = new RelayCommand(() => LoadData());
         ClearFiltersCommand = new RelayCommand(() => ClearFilters());
@@ -42,6 +44,7 @@ public class TransactionViewModel : ViewModelBase
         EditTransactionCommand = new RelayCommand(() => EditTransaction(), () => SelectedTransaction != null);
 
         LoadData();
+        InitializeMonths();
     }
 
     public ObservableCollection<Transaction> Transactions
@@ -50,10 +53,16 @@ public class TransactionViewModel : ViewModelBase
         private set => SetProperty(ref _transactions, value);
     }
 
-    public ObservableCollection<Category> Categories
+    public ObservableCollection<CategoryOption> Categories
     {
         get => _categories;
         private set => SetProperty(ref _categories, value);
+    }
+
+    public ObservableCollection<MonthOption> AvailableMonths
+    {
+        get => _availableMonths;
+        private set => SetProperty(ref _availableMonths, value);
     }
 
     public TransactionType? SelectedTypeFilter
@@ -118,26 +127,11 @@ public class TransactionViewModel : ViewModelBase
 
     private void ApplyFilters()
     {
-        // Filter transactions in memory (no database call)
-        var filtered = _allTransactions.AsEnumerable();
-
-        if (SelectedTypeFilter.HasValue)
-        {
-            filtered = filtered.Where(t => t.Type == SelectedTypeFilter.Value);
-        }
-
-        if (SelectedCategoryFilter.HasValue)
-        {
-            filtered = filtered.Where(t => t.CategoryId == SelectedCategoryFilter.Value);
-        }
-
-        if (SelectedMonthFilter.HasValue)
-        {
-            var month = SelectedMonthFilter.Value;
-            var monthStart = new DateTime(month.Year, month.Month, 1);
-            var monthEnd = monthStart.AddMonths(1).AddDays(-1);
-            filtered = filtered.Where(t => t.Date >= monthStart && t.Date <= monthEnd);
-        }
+        // Use service to filter transactions
+        var filtered = _transactionService.GetTransactionsByFilter(
+            SelectedTypeFilter, 
+            SelectedCategoryFilter, 
+            SelectedMonthFilter);
 
         var filteredList = filtered.OrderByDescending(t => t.Date).ToList();
 
@@ -150,20 +144,64 @@ public class TransactionViewModel : ViewModelBase
         );
     }
 
+    private void InitializeMonths()
+    {
+        // Get unique months from service
+        var monthsWithTransactions = _transactionService.GetMonthsWithTransactions().ToList();
+
+        var currentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        if (!monthsWithTransactions.Contains(currentMonth))
+        {
+            monthsWithTransactions.Add(currentMonth);
+            monthsWithTransactions = monthsWithTransactions.OrderByDescending(d => d).ToList();
+        }
+
+        AvailableMonths.Clear();
+        
+        // Add "Show All" option
+        AvailableMonths.Add(new MonthOption
+        {
+            Date = null,
+            DisplayText = "Visa alla"
+        });
+        
+        foreach (var month in monthsWithTransactions)
+        {
+            var isCurrentMonth = month == currentMonth;
+            var displayText = DateFormatHelper.FormatMonthYear(month);
+            AvailableMonths.Add(new MonthOption
+            {
+                Date = month,
+                DisplayText = isCurrentMonth ? $"★ {displayText}" : displayText
+            });
+        }
+    }
+
     private void LoadData()
     {
         // Load categories (only once)
         if (Categories.Count == 0)
         {
+            // Add "Show All" option
+            Categories.Add(new CategoryOption
+            {
+                Id = null,
+                Name = "Visa alla"
+            });
+            
             var categories = _categoryService.GetAllCategories();
             foreach (var category in categories)
             {
-                Categories.Add(category);
+                Categories.Add(new CategoryOption
+                {
+                    Id = category.Id,
+                    Name = category.Name
+                });
             }
         }
 
-        // Load ALL transactions from database once
-        _allTransactions = _transactionService.GetAllTransactions().ToList();
+        // Refresh available months
+        InitializeMonths();
 
         // Apply current filters to display
         ApplyFilters();
@@ -179,14 +217,9 @@ public class TransactionViewModel : ViewModelBase
     private void DeleteTransaction(int transactionId)
     {
         _transactionService.DeleteTransaction(transactionId);
-
-        // Remove from in-memory list
-        var transaction = _allTransactions.FirstOrDefault(t => t.Id == transactionId);
-        if (transaction != null)
-        {
-            _allTransactions.Remove(transaction);
-            ApplyFilters();
-        }
+        
+        // Reload data to refresh the list and months
+        LoadData();
     }
 
     private void AddTransaction()
@@ -194,14 +227,8 @@ public class TransactionViewModel : ViewModelBase
         var result = _dialogService.ShowTransactionDialog();
         if (result == true)
         {
-            // Reload just the new transaction from database
-            var allTransactions = _transactionService.GetAllTransactions().ToList();
-            var newTransaction = allTransactions.FirstOrDefault(t => !_allTransactions.Any(existing => existing.Id == t.Id));
-            if (newTransaction != null)
-            {
-                _allTransactions.Add(newTransaction);
-                ApplyFilters();
-            }
+            // Reload data to refresh the list and months
+            LoadData();
         }
     }
 
@@ -211,5 +238,17 @@ public class TransactionViewModel : ViewModelBase
             return;
 
         _dialogService.ShowTransactionDialog(SelectedTransaction);
+    }
+
+    public class MonthOption
+    {
+        public DateTime? Date { get; set; }
+        public string DisplayText { get; set; } = string.Empty;
+    }
+
+    public class CategoryOption
+    {
+        public int? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }
