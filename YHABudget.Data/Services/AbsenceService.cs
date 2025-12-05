@@ -39,22 +39,23 @@ public class AbsenceService : IAbsenceService
         if (absence.Deduction <= 0)
             return;
 
-        // Get or create "Lön" category for income/deductions
-        var lonCategory = _context.Categories.FirstOrDefault(c => c.Name == "Lön" && c.Type == TransactionType.Income);
-        if (lonCategory == null)
+        // Get or create absence-specific category for deductions
+        var categoryName = absence.Type == AbsenceType.Sick ? "Sjukfrånvaro" : "VAB-frånvaro";
+        var absenceCategory = _context.Categories.FirstOrDefault(c => c.Name == categoryName && c.Type == TransactionType.Expense);
+        if (absenceCategory == null)
         {
-            lonCategory = new Category { Name = "Lön", Type = TransactionType.Income };
-            _context.Categories.Add(lonCategory);
+            absenceCategory = new Category { Name = categoryName, Type = TransactionType.Expense };
+            _context.Categories.Add(absenceCategory);
             _context.SaveChanges();
         }
 
         var deductionTransaction = new Transaction
         {
-            Description = $"Frånvaro avdrag - {absence.Type} ({absence.Date:yyyy-MM-dd})",
+            Description = $"Frånvaro avdrag ({absence.Date:yyyy-MM-dd})",
             Amount = absence.Deduction,
             Date = absence.Date, // Same month as absence
             Type = TransactionType.Expense,
-            CategoryId = lonCategory.Id
+            CategoryId = absenceCategory.Id
         };
 
         _context.Transactions.Add(deductionTransaction);
@@ -141,7 +142,7 @@ public class AbsenceService : IAbsenceService
             // Deduction transaction is in the same month as absence
             var deductionTransactions = _context.Transactions
                 .Where(t => t.Type == TransactionType.Expense &&
-                           t.Description.Contains($"Frånvaro avdrag - {absence.Type} ({absence.Date:yyyy-MM-dd})"))
+                           t.Description.Contains($"Frånvaro avdrag ({absence.Date:yyyy-MM-dd})"))
                 .ToList();
             
             // Compensation transaction is in the next month
