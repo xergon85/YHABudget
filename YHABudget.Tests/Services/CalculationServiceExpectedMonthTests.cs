@@ -443,4 +443,110 @@ public class CalculationServiceExpectedMonthTests : IDisposable
         Assert.Equal("Storytel", result.ScheduledExpenseTransactions[0].Description);
         Assert.Equal(229m, result.ScheduledExpenseTransactions[0].Amount);
     }
+
+    [Fact]
+    public void CalculateExpectedMonthResult_RecurringTransactionAlreadyGenerated_NotDoubledCounted()
+    {
+        // Arrange - Test must use ACTUAL current month because CalculateExpectedMonthResult
+        // compares against DateTime.Now to determine if it's the current month
+        var today = DateTime.Today;
+        var currentMonth = new DateTime(today.Year, today.Month, 1);
+        
+        // Create a future date in this month (today + 10 days, but ensure it stays in current month)
+        var daysToAdd = Math.Min(10, DateTime.DaysInMonth(today.Year, today.Month) - today.Day);
+        var futureDate = today.AddDays(Math.Max(1, daysToAdd)); // At least 1 day in future
+
+        var category = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
+        _context.Categories.Add(category);
+
+        // Monthly recurring salary starting from past
+        _context.RecurringTransactions.Add(new RecurringTransaction
+        {
+            Id = 1,
+            Description = "Månadslön",
+            Amount = 50000m,
+            Type = TransactionType.Income,
+            RecurrenceType = RecurrenceType.Monthly,
+            StartDate = new DateTime(2024, 1, futureDate.Day),
+            IsActive = true,
+            CategoryId = 1,
+            Category = category
+        });
+
+        // Already generated salary transaction for this month (future date)
+        _context.Transactions.Add(new Transaction
+        {
+            Id = 1,
+            Description = "Månadslön",
+            Amount = 50000m,
+            Date = futureDate,
+            Type = TransactionType.Income,
+            CategoryId = 1,
+            Category = category,
+            IsRecurring = true // Mark as generated from recurring
+        });
+
+        _context.SaveChanges();
+
+        // Act
+        var result = _service.CalculateExpectedMonthResult(currentMonth);
+
+        // Assert - Should only count salary once, not twice
+        Assert.True(result.IsCurrentMonth);
+        Assert.Equal(50000m, result.ScheduledIncome); // Only counted once
+        Assert.Single(result.ScheduledIncomeTransactions); // Only one entry
+        Assert.Equal("Månadslön", result.ScheduledIncomeTransactions[0].Description);
+        Assert.Equal(50000m, result.ScheduledIncomeTransactions[0].Amount);
+    }
+
+    [Fact]
+    public void CalculateExpectedMonthResult_SalaryOnFifthTodayIsEighth_NotCountedTwice()
+    {
+        // Arrange - Salary on the 5th, today is the 8th
+        // This simulates the real-world bug where salary was counted twice
+        var today = new DateTime(2025, 12, 8); // December 8th
+        var currentMonth = new DateTime(2025, 12, 1);
+        var salaryDate = new DateTime(2025, 12, 5); // Already happened
+
+        var category = new Category { Id = 1, Name = "Lön", Type = TransactionType.Income };
+        _context.Categories.Add(category);
+
+        // Monthly recurring salary on the 5th
+        _context.RecurringTransactions.Add(new RecurringTransaction
+        {
+            Id = 1,
+            Description = "Månadslön",
+            Amount = 50000m,
+            Type = TransactionType.Income,
+            RecurrenceType = RecurrenceType.Monthly,
+            StartDate = new DateTime(2024, 1, 5),
+            IsActive = true,
+            CategoryId = 1,
+            Category = category
+        });
+
+        // Salary transaction already generated for December 5th (past date in current month)
+        _context.Transactions.Add(new Transaction
+        {
+            Id = 1,
+            Description = "Månadslön",
+            Amount = 50000m,
+            Date = salaryDate, // December 5th (in the past)
+            Type = TransactionType.Income,
+            CategoryId = 1,
+            Category = category,
+            IsRecurring = true
+        });
+
+        _context.SaveChanges();
+
+        // Act
+        var result = _service.CalculateExpectedMonthResult(currentMonth);
+
+        // Assert - Salary should NOT be in scheduled income (it's already past)
+        // and should NOT be counted from recurring transactions either
+        Assert.True(result.IsCurrentMonth);
+        Assert.Equal(0m, result.ScheduledIncome); // Salary already happened, not in future
+        Assert.Empty(result.ScheduledIncomeTransactions); // No scheduled income
+    }
 }

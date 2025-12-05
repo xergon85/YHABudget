@@ -113,7 +113,7 @@ public class CalculationService : ICalculationService
             CalculateScheduledTransactions(currentMonth, monthEnd);
 
         var projectedNetBalance = currentNetBalance + scheduledIncome - scheduledExpenses;
-        var expectedAccountBalance = currentAccountBalance + projectedNetBalance;
+        var expectedAccountBalance = currentAccountBalance + scheduledIncome - scheduledExpenses;
 
         return new ExpectedMonthResult
         {
