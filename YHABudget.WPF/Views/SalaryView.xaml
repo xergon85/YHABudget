@@ -7,7 +7,7 @@
              d:DesignHeight="800"
              d:DesignWidth="900"
              Background="{StaticResource BackgroundLightBrush}">
-    
+
     <Grid Margin="30">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -74,40 +74,65 @@
                               HeadersVisibility="Column"
                               SelectionMode="Single"
                               RowHeight="50">
-                        <DataGrid.Resources>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="Padding" Value="10,15"/>
-                                <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}"/>
-                            </Style>
+                        <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}"/>
                                 <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
+                                    <Trigger Property="IsMouseOver"
+                                            Value="True">
+                                        <Setter Property="Background"
+                                                Value="{StaticResource PrimaryLightBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected"
+                                            Value="True">
+                                        <Setter Property="Background"
+                                                Value="{StaticResource PrimaryLightBrush}"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="8"/>
-                                <Setter Property="FontSize" Value="15"/>
+                                <Setter Property="BorderThickness"
+                                        Value="0"/>
+                                <Setter Property="Padding"
+                                        Value="8"/>
+                                <Setter Property="FocusVisualStyle"
+                                        Value="{x:Null}"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="DataGridCell">
-                                            <Border Background="{TemplateBinding Background}"
-                                                    Padding="{TemplateBinding Padding}">
+                                            <Border Padding="{TemplateBinding Padding}"
+                                                    Background="{TemplateBinding Background}">
                                                 <ContentPresenter VerticalAlignment="Center"/>
                                             </Border>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected"
+                                            Value="True">
+                                        <Setter Property="Background"
+                                                Value="{StaticResource PrimaryLightBrush}"/>
+                                        <Setter Property="Foreground"
+                                                Value="{StaticResource TextPrimaryBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background"
+                                        Value="Transparent"/>
+                                <Setter Property="Foreground"
+                                        Value="{StaticResource TextSecondaryBrush}"/>
+                                <Setter Property="FontWeight"
+                                        Value="SemiBold"/>
+                                <Setter Property="Padding"
+                                        Value="10,15"/>
+                                <Setter Property="BorderThickness"
+                                        Value="0,0,0,2"/>
+                                <Setter Property="BorderBrush"
+                                        Value="{StaticResource DividerBrush}"/>
                             </Style>
                         </DataGrid.Resources>
 
@@ -132,20 +157,23 @@
                                                     Style="{StaticResource IconButtonStyle}"
                                                     ToolTip="Skapa månadslön"
                                                     Margin="0,0,8,0">
-                                                <TextBlock Text="➕" FontSize="16"/>
+                                                <TextBlock Text="➕"
+                                                        FontSize="16"/>
                                             </Button>
                                             <Button Command="{Binding DataContext.EditSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource IconButtonStyle}"
                                                     ToolTip="Redigera"
                                                     Margin="0,0,8,0">
-                                                <TextBlock Text="✏️" FontSize="16"/>
+                                                <TextBlock Text="✏️"
+                                                        FontSize="16"/>
                                             </Button>
                                             <Button Command="{Binding DataContext.DeleteSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource IconButtonDangerStyle}"
                                                     ToolTip="Ta bort">
-                                                <TextBlock Text="🗑️" FontSize="16"/>
+                                                <TextBlock Text="🗑️"
+                                                        FontSize="16"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>
