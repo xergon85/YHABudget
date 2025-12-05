@@ -18,10 +18,18 @@
             <Grid Margin="0,0,0,20">
                 <TextBlock Text="Översikt"
                            Style="{StaticResource SectionHeaderStyle}"/>
-                <!-- Month Selector -->
+                <!-- Month Selector and Refresh Button -->
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center">
+                    <Button Content="🔄"
+                            Command="{Binding LoadDataCommand}"
+                            Style="{StaticResource IconButtonStyle}"
+                            ToolTip="Uppdatera"
+                            Width="36"
+                            Height="36"
+                            Margin="0,0,10,0"
+                            FontSize="16"/>
                     <TextBlock Text="Månad:"
                                VerticalAlignment="Center"
                                Margin="0,0,10,0"

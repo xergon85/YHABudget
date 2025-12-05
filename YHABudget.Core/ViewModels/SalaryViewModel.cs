@@ -3,6 +3,7 @@ using System.Windows.Input;
 using YHABudget.Core.Commands;
 using YHABudget.Core.MVVM;
 using YHABudget.Core.Services;
+using YHABudget.Data.Enums;
 using YHABudget.Data.Models;
 using YHABudget.Data.Services;
 
@@ -12,14 +13,22 @@ public class SalaryViewModel : ViewModelBase
 {
     private readonly ISalarySettingsService _salarySettingsService;
     private readonly IDialogService _dialogService;
+    private readonly IRecurringTransactionService _recurringTransactionService;
+    private readonly ICategoryService _categoryService;
 
     private ObservableCollection<SalarySettings> _salaries;
     private decimal _totalMonthlyIncome;
 
-    public SalaryViewModel(ISalarySettingsService salarySettingsService, IDialogService dialogService)
+    public SalaryViewModel(
+        ISalarySettingsService salarySettingsService,
+        IDialogService dialogService,
+        IRecurringTransactionService recurringTransactionService,
+        ICategoryService categoryService)
     {
         _salarySettingsService = salarySettingsService;
         _dialogService = dialogService;
+        _recurringTransactionService = recurringTransactionService;
+        _categoryService = categoryService;
 
         _salaries = new ObservableCollection<SalarySettings>();
 
@@ -27,6 +36,7 @@ public class SalaryViewModel : ViewModelBase
         AddSalaryCommand = new RelayCommand(() => AddSalary());
         EditSalaryCommand = new RelayCommand<SalarySettings>((salary) => EditSalary(salary));
         DeleteSalaryCommand = new RelayCommand<SalarySettings>((salary) => DeleteSalary(salary));
+        CreateRecurringTransactionCommand = new RelayCommand<SalarySettings>((salary) => CreateRecurringTransaction(salary));
 
         LoadData();
     }
@@ -47,6 +57,7 @@ public class SalaryViewModel : ViewModelBase
     public ICommand AddSalaryCommand { get; }
     public ICommand EditSalaryCommand { get; }
     public ICommand DeleteSalaryCommand { get; }
+    public ICommand CreateRecurringTransactionCommand { get; }
 
     private void LoadData()
     {
@@ -114,5 +125,62 @@ public class SalaryViewModel : ViewModelBase
                 : 0;
         }
         TotalMonthlyIncome = total;
+    }
+
+    private void CreateRecurringTransaction(SalarySettings? salary)
+    {
+        if (salary == null) return;
+
+        // Calculate monthly salary amount
+        var monthlyAmount = salary.AnnualHours > 0
+            ? (salary.AnnualIncome / salary.AnnualHours) * 160m
+            : 0;
+
+        if (monthlyAmount <= 0)
+        {
+            // Could show a message to user, but for now just return
+            return;
+        }
+
+        // Get "Lön" category (id=10 from seed data)
+        var lonCategory = _categoryService.GetAllCategories()
+            .FirstOrDefault(c => c.Name == "Lön" && c.Type == TransactionType.Income);
+
+        if (lonCategory == null)
+        {
+            // Shouldn't happen with seed data, but handle gracefully
+            return;
+        }
+
+        // Check if a recurring transaction already exists for this salary
+        var expectedDescription = $"Månadslön - {salary.Note}";
+        var existingTransaction = _recurringTransactionService.GetAllRecurringTransactions()
+            .FirstOrDefault(rt => rt.Description == expectedDescription && rt.IsActive);
+
+        if (existingTransaction != null)
+        {
+            // Transaction already exists, don't create duplicate
+            return;
+        }
+
+        // Create recurring transaction
+        var recurringTransaction = new RecurringTransaction
+        {
+            Description = expectedDescription,
+            Amount = monthlyAmount,
+            CategoryId = lonCategory.Id,
+            Type = TransactionType.Income,
+            IsActive = true,
+            RecurrenceType = RecurrenceType.Monthly,
+            StartDate = DateTime.Now.Date
+        };
+
+        _recurringTransactionService.AddRecurringTransaction(recurringTransaction);
+
+        // Process the recurring transaction for the current month so it shows up immediately
+        _recurringTransactionService.ProcessRecurringTransactionsForMonth(DateTime.Now);
+
+        // Notify user or refresh UI if needed
+        // For now, the user can see it in the RecurringTransactionView
     }
 }

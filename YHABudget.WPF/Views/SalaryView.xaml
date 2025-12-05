@@ -122,11 +122,18 @@
                                                 Binding="{Binding AnnualHours, StringFormat=N0}"
                                                 Width="*"/>
                             <DataGridTemplateColumn Header="Åtgärder"
-                                                    Width="120">
+                                                    Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal"
                                                     HorizontalAlignment="center">
+                                            <Button Command="{Binding DataContext.CreateRecurringTransactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    ToolTip="Skapa månadslön"
+                                                    Margin="0,0,8,0">
+                                                <TextBlock Text="➕" FontSize="16"/>
+                                            </Button>
                                             <Button Command="{Binding DataContext.EditSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource IconButtonStyle}"
