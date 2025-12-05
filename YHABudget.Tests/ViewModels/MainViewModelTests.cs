@@ -36,9 +36,9 @@ public class MainViewModelTests : IDisposable
         _calculationService = new CalculationService(_context);
         _recurringTransactionService = new RecurringTransactionService(_context);
         _salarySettingsService = new SalarySettingsService(_context);
-        _absenceService = new AbsenceService(_context);
+        _absenceService = new AbsenceService(_context, _salarySettingsService);
         _mockDialogService = new Mock<IDialogService>();
-        
+
         // Create child ViewModels
         _overviewViewModel = new OverviewViewModel(_recurringTransactionService, _calculationService);
         _transactionViewModel = new TransactionViewModel(_transactionService, _categoryService, _recurringTransactionService, _mockDialogService.Object);

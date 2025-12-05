@@ -15,7 +15,7 @@ public class MockDialogService : IDialogService
     public bool? ShowTransactionDialog(Transaction? transaction = null) => null;
     public bool? ShowRecurringTransactionDialog(RecurringTransaction? recurringTransaction = null) => null;
     public SalarySettings? ShowSalaryDialog(SalarySettings? salary = null) => null;
-    public Absence? ShowAbsenceDialog(Absence? absence, ISalarySettingsService salarySettingsService) => null;
+    public Absence? ShowAbsenceDialog(Absence? absence, IAbsenceService absenceService) => null;
 }
 
 public class RecurringTransactionViewModelTests : IDisposable

@@ -68,9 +68,9 @@ public class DialogService : IDialogService
         return result == true ? viewModel.ToSalarySettings() : null;
     }
 
-    public Absence? ShowAbsenceDialog(Absence? absence, ISalarySettingsService salarySettingsService)
+    public Absence? ShowAbsenceDialog(Absence? absence, IAbsenceService absenceService)
     {
-        var viewModel = new AbsenceDialogViewModel(salarySettingsService);
+        var viewModel = new AbsenceDialogViewModel(absenceService);
 
         viewModel.LoadAbsence(absence);
 

@@ -8,8 +8,8 @@ namespace YHABudget.Core.ViewModels;
 
 public class AbsenceDialogViewModel : ViewModelBase
 {
-    private readonly ISalarySettingsService _salarySettingsService;
-    
+    private readonly IAbsenceService _absenceService;
+
     private int _id;
     private DateTime _date;
     private AbsenceType _type;
@@ -19,12 +19,12 @@ public class AbsenceDialogViewModel : ViewModelBase
     private string? _note;
     private bool _isEditMode;
 
-    public AbsenceDialogViewModel(ISalarySettingsService salarySettingsService)
+    public AbsenceDialogViewModel(IAbsenceService absenceService)
     {
-        _salarySettingsService = salarySettingsService;
+        _absenceService = absenceService;
         _date = DateTime.Now.Date;
         _type = AbsenceType.Sick;
-        
+
         CalculateImpact();
     }
 
@@ -128,42 +128,11 @@ public class AbsenceDialogViewModel : ViewModelBase
 
     private void CalculateImpact()
     {
-        // Get total salary from all settings
-        var salaries = _salarySettingsService.GetAllSettings();
-        decimal totalAnnualIncome = 0;
-        decimal totalAnnualHours = 0;
+        // Use service to calculate all absence impact values
+        var (dailyIncome, deduction, compensation) = _absenceService.CalculateAbsenceImpact(Date, Type);
 
-        foreach (var salary in salaries)
-        {
-            totalAnnualIncome += salary.AnnualIncome;
-            totalAnnualHours += salary.AnnualHours;
-        }
-
-        if (totalAnnualHours <= 0)
-        {
-            DailyIncome = 0;
-            Deduction = 0;
-            Compensation = 0;
-            return;
-        }
-
-        // Calculate monthly and daily income
-        var monthlyIncome = (totalAnnualIncome / totalAnnualHours) * 160m;
-        var dailyIncome = monthlyIncome / 22m; // Approximate 22 working days per month
         DailyIncome = dailyIncome;
-
-        // Apply VAB cap if applicable
-        decimal effectiveAnnualIncome = totalAnnualIncome;
-        const decimal VAB_CAP = 410_000m; // 7.5 PBB
-
-        if (Type == AbsenceType.VAB && totalAnnualIncome > VAB_CAP)
-        {
-            effectiveAnnualIncome = VAB_CAP;
-            var cappedMonthlyIncome = (effectiveAnnualIncome / totalAnnualHours) * 160m;
-            dailyIncome = cappedMonthlyIncome / 22m;
-        }
-
-        Deduction = dailyIncome;
-        Compensation = dailyIncome * 0.80m; // 80% compensation
+        Deduction = deduction;
+        Compensation = compensation;
     }
 }

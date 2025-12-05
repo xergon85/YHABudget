@@ -8,5 +8,5 @@ public interface IDialogService
     bool? ShowTransactionDialog(Transaction? transaction = null);
     bool? ShowRecurringTransactionDialog(RecurringTransaction? recurringTransaction = null);
     SalarySettings? ShowSalaryDialog(SalarySettings? salary = null);
-    Absence? ShowAbsenceDialog(Absence? absence, ISalarySettingsService salarySettingsService);
+    Absence? ShowAbsenceDialog(Absence? absence, IAbsenceService absenceService);
 }

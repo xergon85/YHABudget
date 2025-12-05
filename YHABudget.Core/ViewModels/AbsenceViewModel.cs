@@ -72,7 +72,7 @@ public class AbsenceViewModel : ViewModelBase
 
     private void AddAbsence()
     {
-        var result = _dialogService.ShowAbsenceDialog(null, _salarySettingsService);
+        var result = _dialogService.ShowAbsenceDialog(null, _absenceService);
         if (result != null)
         {
             var added = _absenceService.AddAbsence(result);
@@ -84,7 +84,7 @@ public class AbsenceViewModel : ViewModelBase
     {
         if (absence == null) return;
 
-        var result = _dialogService.ShowAbsenceDialog(absence, _salarySettingsService);
+        var result = _dialogService.ShowAbsenceDialog(absence, _absenceService);
         if (result != null)
         {
             _absenceService.UpdateAbsence(result);
