@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/YAHBudget.Docs/">
-    <File Path="Assignment.md" />
-    <File Path="Planning.md" />
-    <File Path="UI-Sketch.md" />
-  </Folder>
-  <Project Path="YHABudget.WPF/YHABudget.WPF.csproj" />
-</Solution>

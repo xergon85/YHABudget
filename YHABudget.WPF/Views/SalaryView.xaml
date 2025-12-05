@@ -4,11 +4,150 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="450"
-             d:DesignWidth="800"
+             d:DesignHeight="800"
+             d:DesignWidth="900"
              Background="{StaticResource BackgroundLightBrush}">
+    
     <Grid Margin="30">
-        <TextBlock Text="Löneinställningar - Coming Soon"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0"
+                   Text="Löneinställningar"
                    Style="{StaticResource SectionHeaderStyle}"/>
+
+        <!-- Total Monthly Income Card -->
+        <Border Grid.Row="1"
+                Style="{StaticResource CardStyle}"
+                Margin="0,20,0,20"
+                Background="{StaticResource PrimaryBrush}">
+            <StackPanel>
+                <TextBlock Text="Total månadsinkomst (brutto)"
+                           FontSize="14"
+                           Foreground="White"
+                           Margin="0,0,0,8"/>
+                <TextBlock FontSize="32"
+                           FontWeight="Bold"
+                           Foreground="White">
+                    <Run Text="{Binding TotalMonthlyIncome, Mode=OneWay, StringFormat=N0}"/>
+                    <Run Text="kr"/>
+                </TextBlock>
+                <TextBlock Text="Beräknat på 160 timmar per månad"
+                           FontSize="12"
+                           Foreground="White"
+                           Opacity="0.8"
+                           Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Salary List -->
+        <Border Grid.Row="2"
+                Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Button Grid.Row="0"
+                        Content="+ Lägg till lön"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Command="{Binding AddSalaryCommand}"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,0,15"/>
+
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <DataGrid ItemsSource="{Binding Salaries}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              IsReadOnly="True"
+                              GridLinesVisibility="None"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              RowHeight="50">
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Padding" Value="10,15"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}"/>
+                            </Style>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8"/>
+                                <Setter Property="FontSize" Value="15"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.Resources>
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Beskrivning"
+                                                Binding="{Binding Note}"
+                                                Width="2*"/>
+                            <DataGridTextColumn Header="Årsinkomst"
+                                                Binding="{Binding AnnualIncome, StringFormat=N0}"
+                                                Width="*"/>
+                            <DataGridTextColumn Header="Årstimmar"
+                                                Binding="{Binding AnnualHours, StringFormat=N0}"
+                                                Width="*"/>
+                            <DataGridTemplateColumn Header="Åtgärder"
+                                                    Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal"
+                                                    HorizontalAlignment="center">
+                                            <Button Command="{Binding DataContext.EditSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    ToolTip="Redigera"
+                                                    Margin="0,0,8,0">
+                                                <TextBlock Text="✏️" FontSize="16"/>
+                                            </Button>
+                                            <Button Command="{Binding DataContext.DeleteSalaryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource IconButtonDangerStyle}"
+                                                    ToolTip="Ta bort">
+                                                <TextBlock Text="🗑️" FontSize="16"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

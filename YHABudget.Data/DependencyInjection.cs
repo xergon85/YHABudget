@@ -13,11 +13,12 @@ public static class DependencyInjection
         services.AddDbContext<BudgetDbContext>(options =>
             options.UseSqlite(connectionString));
 
-        // Register Data Services
-        services.AddScoped<TransactionService>();
-        services.AddScoped<CategoryService>();
-        services.AddScoped<RecurringTransactionService>();
-        services.AddScoped<CalculationService>();
+        // Register Data Services as Transient to allow use in Singleton ViewModels
+        services.AddTransient<TransactionService>();
+        services.AddTransient<CategoryService>();
+        services.AddTransient<RecurringTransactionService>();
+        services.AddTransient<CalculationService>();
+        services.AddTransient<SalarySettingsService>();
 
         return services;
     }

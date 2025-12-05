@@ -51,4 +51,19 @@ public class DialogService : IDialogService
 
         return dialog.ShowDialog();
     }
+
+    public SalarySettings? ShowSalaryDialog(SalarySettings? salary = null)
+    {
+        var viewModel = _serviceProvider.GetRequiredService<SalaryDialogViewModel>();
+
+        viewModel.LoadSalary(salary);
+
+        var dialog = new SalaryDialog(viewModel)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        var result = dialog.ShowDialog();
+        return result == true ? viewModel.ToSalarySettings() : null;
+    }
 }

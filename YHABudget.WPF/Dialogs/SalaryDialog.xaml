@@ -1,0 +1,112 @@
+<Window x:Class="YHABudget.WPF.Dialogs.SalaryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:YHABudget.WPF.Converters"
+        mc:Ignorable="d"
+        Height="550"
+        Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Colors.xaml"/>
+                <ResourceDictionary Source="/Resources/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <local:EditModeTitleConverter x:Key="EditModeTitleConverter"/>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0"
+                   Text="{Binding IsEditMode, Converter={StaticResource EditModeTitleConverter}, ConverterParameter=Lön}"
+                   Style="{StaticResource SectionHeaderStyle}"
+                   Margin="0,0,0,20"/>
+
+        <!-- Form -->
+        <Border Grid.Row="1"
+                Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <!-- Description -->
+                <TextBlock Text="Beskrivning:"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,8"/>
+                <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource InputTextBoxStyle}"
+                         Margin="0,0,0,20"/>
+
+                <!-- Annual Income -->
+                <TextBlock Text="Årsinkomst (brutto):"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,8"/>
+                <TextBox Text="{Binding AnnualIncome, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource InputTextBoxStyle}"
+                         GotFocus="TextBox_GotFocus"
+                         PreviewTextInput="NumericTextBox_PreviewTextInput"
+                         Margin="0,0,0,20"/>
+
+                <!-- Annual Hours -->
+                <TextBlock Text="Årsarbetstid (timmar):"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,8"/>
+                <TextBox Text="{Binding AnnualHours, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource InputTextBoxStyle}"
+                         GotFocus="TextBox_GotFocus"
+                         PreviewTextInput="NumericTextBox_PreviewTextInput"
+                         Margin="0,0,0,20"/>
+
+                <!-- Calculated Monthly Income -->
+                <Border Background="{StaticResource PrimaryBrush}"
+                        Padding="15"
+                        CornerRadius="4"
+                        Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Beräknad månadslön"
+                                   FontSize="12"
+                                   Foreground="White"
+                                   Margin="0,0,0,4"/>
+                        <TextBlock FontSize="24"
+                                   FontWeight="SemiBold"
+                                   Foreground="White">
+                            <Run Text="{Binding MonthlyIncome, Mode=OneWay, StringFormat=N0}"/>
+                            <Run Text="kr"/>
+                        </TextBlock>
+                        <TextBlock Text="Beräknat på 160 timmar per månad"
+                                   FontSize="11"
+                                   Foreground="White"
+                                   Opacity="0.8"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,20,0,0">
+            <Button Content="Avbryt"
+                    Click="CancelButton_Click"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Padding="20,10"
+                    Margin="0,0,10,0"/>
+            <Button Content="Spara"
+                    Click="SaveButton_Click"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Padding="20,10"/>
+        </StackPanel>
+    </Grid>
+</Window>

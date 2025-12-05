@@ -106,7 +106,7 @@ public class BudgetDbContext : DbContext
                 AnnualIncome = 12 * 25000m,
                 AnnualHours = 1920m,
                 Note = "Lön",
-                UpdatedAt = DateTime.Now
+                UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
     }

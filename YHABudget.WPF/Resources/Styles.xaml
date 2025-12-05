@@ -187,4 +187,84 @@
                         Value="White"/>
         </Style>
 
+        <!-- Icon Button Style (Edit) -->
+        <Style x:Key="IconButtonStyle"
+               TargetType="Button">
+                <Setter Property="Background"
+                        Value="Transparent"/>
+                <Setter Property="Foreground"
+                        Value="{StaticResource PrimaryBrush}"/>
+                <Setter Property="BorderBrush"
+                        Value="{StaticResource PrimaryBrush}"/>
+                <Setter Property="BorderThickness"
+                        Value="1"/>
+                <Setter Property="Width"
+                        Value="32"/>
+                <Setter Property="Height"
+                        Value="32"/>
+                <Setter Property="Padding"
+                        Value="4"/>
+                <Setter Property="Cursor"
+                        Value="Hand"/>
+                <Setter Property="Template">
+                        <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="4">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver"
+                                                         Value="True">
+                                                        <Setter Property="Background"
+                                                                Value="{StaticResource PrimaryLightBrush}"/>
+                                                </Trigger>
+                                        </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                        </Setter.Value>
+                </Setter>
+        </Style>
+
+        <!-- Icon Button Danger Style (Delete) -->
+        <Style x:Key="IconButtonDangerStyle"
+               TargetType="Button">
+                <Setter Property="Background"
+                        Value="#E53E3E"/>
+                <Setter Property="Foreground"
+                        Value="White"/>
+                <Setter Property="BorderThickness"
+                        Value="0"/>
+                <Setter Property="Width"
+                        Value="32"/>
+                <Setter Property="Height"
+                        Value="32"/>
+                <Setter Property="Padding"
+                        Value="4"/>
+                <Setter Property="Cursor"
+                        Value="Hand"/>
+                <Setter Property="Template">
+                        <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="4">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver"
+                                                         Value="True">
+                                                        <Setter Property="Background"
+                                                                Value="#C53030"/>
+                                                </Trigger>
+                                        </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                        </Setter.Value>
+                </Setter>
+        </Style>
+
 </ResourceDictionary>

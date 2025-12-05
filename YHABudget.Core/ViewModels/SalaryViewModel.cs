@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using YHABudget.Core.Commands;
 using YHABudget.Core.MVVM;
+using YHABudget.Core.Services;
 using YHABudget.Data.Models;
 using YHABudget.Data.Services;
 
@@ -10,24 +11,22 @@ namespace YHABudget.Core.ViewModels;
 public class SalaryViewModel : ViewModelBase
 {
     private readonly ISalarySettingsService _salarySettingsService;
-    private readonly ICalculationService _calculationService;
+    private readonly IDialogService _dialogService;
 
     private ObservableCollection<SalarySettings> _salaries;
-    private SalarySettings? _selectedSalary;
     private decimal _totalMonthlyIncome;
 
-    public SalaryViewModel(ISalarySettingsService salarySettingsService, ICalculationService calculationService)
+    public SalaryViewModel(ISalarySettingsService salarySettingsService, IDialogService dialogService)
     {
         _salarySettingsService = salarySettingsService;
-        _calculationService = calculationService;
+        _dialogService = dialogService;
 
         _salaries = new ObservableCollection<SalarySettings>();
 
         LoadDataCommand = new RelayCommand(() => LoadData());
         AddSalaryCommand = new RelayCommand(() => AddSalary());
-        SaveSalaryCommand = new RelayCommand(() => SaveSalary(), () => SelectedSalary != null);
-        DeleteSalaryCommand = new RelayCommand(() => DeleteSalary(), () => SelectedSalary != null);
-        CancelEditCommand = new RelayCommand(() => CancelEdit());
+        EditSalaryCommand = new RelayCommand<SalarySettings>((salary) => EditSalary(salary));
+        DeleteSalaryCommand = new RelayCommand<SalarySettings>((salary) => DeleteSalary(salary));
 
         LoadData();
     }
@@ -38,33 +37,16 @@ public class SalaryViewModel : ViewModelBase
         private set => SetProperty(ref _salaries, value);
     }
 
-    public SalarySettings? SelectedSalary
-    {
-        get => _selectedSalary;
-        set
-        {
-            if (SetProperty(ref _selectedSalary, value))
-            {
-                ((RelayCommand)SaveSalaryCommand).RaiseCanExecuteChanged();
-                ((RelayCommand)DeleteSalaryCommand).RaiseCanExecuteChanged();
-                OnPropertyChanged(nameof(IsEditing));
-            }
-        }
-    }
-
     public decimal TotalMonthlyIncome
     {
         get => _totalMonthlyIncome;
         private set => SetProperty(ref _totalMonthlyIncome, value);
     }
 
-    public bool IsEditing => SelectedSalary != null;
-
     public ICommand LoadDataCommand { get; }
     public ICommand AddSalaryCommand { get; }
-    public ICommand SaveSalaryCommand { get; }
+    public ICommand EditSalaryCommand { get; }
     public ICommand DeleteSalaryCommand { get; }
-    public ICommand CancelEditCommand { get; }
 
     private void LoadData()
     {
@@ -80,65 +62,46 @@ public class SalaryViewModel : ViewModelBase
 
     private void AddSalary()
     {
-        var newSalary = new SalarySettings
+        var result = _dialogService.ShowSalaryDialog(null);
+        if (result != null)
         {
-            AnnualIncome = 0,
-            AnnualHours = 0,
-            Note = string.Empty,
-            UpdatedAt = DateTime.Now
-        };
-
-        SelectedSalary = newSalary;
+            var added = _salarySettingsService.AddSettings(result);
+            Salaries.Add(added);
+            CalculateTotalMonthlyIncome();
+        }
     }
 
-    private void SaveSalary()
+    private void EditSalary(SalarySettings? salary)
     {
-        if (SelectedSalary == null) return;
+        if (salary == null) return;
 
-        if (SelectedSalary.Id == 0)
+        var result = _dialogService.ShowSalaryDialog(salary);
+        if (result != null)
         {
-            // New salary - add to database
-            var added = _salarySettingsService.AddSettings(SelectedSalary);
-            Salaries.Add(added);
-        }
-        else
-        {
-            // Existing salary - update
-            _salarySettingsService.UpdateSettings(SelectedSalary);
+            _salarySettingsService.UpdateSettings(result);
 
             // Refresh the item in the collection
-            var index = Salaries.IndexOf(SelectedSalary);
+            var index = Salaries.IndexOf(salary);
             if (index >= 0)
             {
-                var updated = _salarySettingsService.GetSettingsById(SelectedSalary.Id);
+                var updated = _salarySettingsService.GetSettingsById(result.Id);
                 if (updated != null)
                 {
                     Salaries[index] = updated;
                 }
             }
-        }
 
-        CalculateTotalMonthlyIncome();
-        SelectedSalary = null;
-    }
-
-    private void DeleteSalary()
-    {
-        if (SelectedSalary == null) return;
-
-        if (SelectedSalary.Id > 0)
-        {
-            _salarySettingsService.DeleteSettings(SelectedSalary.Id);
-            Salaries.Remove(SelectedSalary);
             CalculateTotalMonthlyIncome();
         }
-
-        SelectedSalary = null;
     }
 
-    private void CancelEdit()
+    private void DeleteSalary(SalarySettings? salary)
     {
-        SelectedSalary = null;
+        if (salary == null || salary.Id == 0) return;
+
+        _salarySettingsService.DeleteSettings(salary.Id);
+        Salaries.Remove(salary);
+        CalculateTotalMonthlyIncome();
     }
 
     private void CalculateTotalMonthlyIncome()
@@ -146,10 +109,9 @@ public class SalaryViewModel : ViewModelBase
         decimal total = 0;
         foreach (var salary in Salaries)
         {
-            if (salary.AnnualHours > 0)
-            {
-                total += _calculationService.CalculateMonthlyIncome(salary.AnnualIncome, salary.AnnualHours);
-            }
+            total += salary.AnnualHours > 0
+                ? (salary.AnnualIncome / salary.AnnualHours) * 160m
+                : 0;
         }
         TotalMonthlyIncome = total;
     }

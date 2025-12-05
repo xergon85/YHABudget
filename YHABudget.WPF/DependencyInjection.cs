@@ -14,14 +14,15 @@ public static class DependencyInjection
         // Register Data Layer (infrastructure concerns)
         services.AddDataServices(connectionString);
 
-        // Map concrete services to interfaces
-        services.AddScoped<ITransactionService>(sp => sp.GetRequiredService<TransactionService>());
-        services.AddScoped<ICategoryService>(sp => sp.GetRequiredService<CategoryService>());
-        services.AddScoped<IRecurringTransactionService>(sp => sp.GetRequiredService<RecurringTransactionService>());
-        services.AddScoped<ICalculationService>(sp => sp.GetRequiredService<CalculationService>());
+        // Map concrete services to interfaces (Transient to match Data layer)
+        services.AddTransient<ITransactionService>(sp => sp.GetRequiredService<TransactionService>());
+        services.AddTransient<ICategoryService>(sp => sp.GetRequiredService<CategoryService>());
+        services.AddTransient<IRecurringTransactionService>(sp => sp.GetRequiredService<RecurringTransactionService>());
+        services.AddTransient<ICalculationService>(sp => sp.GetRequiredService<CalculationService>());
+        services.AddTransient<ISalarySettingsService>(sp => sp.GetRequiredService<SalarySettingsService>());
 
         // Register WPF Services
-        services.AddScoped<IDialogService, DialogService>();
+        services.AddTransient<IDialogService, DialogService>();
 
         // Register Main ViewModels (Singleton - one instance per app lifetime)
         services.AddSingleton<MainViewModel>();
@@ -33,6 +34,7 @@ public static class DependencyInjection
         // Register Dialog ViewModels (Transient - new instance per dialog)
         services.AddTransient<TransactionDialogViewModel>();
         services.AddTransient<RecurringTransactionDialogViewModel>();
+        services.AddTransient<SalaryDialogViewModel>();
 
         // Register MainWindow
         services.AddSingleton<MainWindow>();
