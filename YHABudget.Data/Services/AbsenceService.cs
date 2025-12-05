@@ -48,8 +48,18 @@ public class AbsenceService : IAbsenceService
 
     public void UpdateAbsence(Absence absence)
     {
-        _context.Absences.Update(absence);
-        _context.SaveChanges();
+        var existingAbsence = _context.Absences.Find(absence.Id);
+        if (existingAbsence != null)
+        {
+            existingAbsence.Date = absence.Date;
+            existingAbsence.Type = absence.Type;
+            existingAbsence.DailyIncome = absence.DailyIncome;
+            existingAbsence.Deduction = absence.Deduction;
+            existingAbsence.Compensation = absence.Compensation;
+            existingAbsence.Note = absence.Note;
+            
+            _context.SaveChanges();
+        }
     }
 
     public void DeleteAbsence(int id)

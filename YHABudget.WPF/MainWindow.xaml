@@ -29,6 +29,9 @@
         <DataTemplate DataType="{x:Type vm:SalaryViewModel}">
             <views:SalaryView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AbsenceViewModel}">
+            <views:AbsenceView/>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -66,6 +69,10 @@
                 <Button Content="Lön"
                         Style="{StaticResource NavigationButtonStyle}"
                         Command="{Binding NavigateToSalaryCommand}"/>
+
+                <Button Content="Frånvaro"
+                        Style="{StaticResource NavigationButtonStyle}"
+                        Command="{Binding NavigateToAbsenceCommand}"/>
             </StackPanel>
         </Border>
 
