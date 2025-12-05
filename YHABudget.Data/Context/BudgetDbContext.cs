@@ -10,6 +10,7 @@ public class BudgetDbContext : DbContext
     public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<SalarySettings> SalarySettings { get; set; }
+    public DbSet<Absence> Absences { get; set; }
 
     public BudgetDbContext(DbContextOptions<BudgetDbContext> options) : base(options)
     {
@@ -67,6 +68,19 @@ public class BudgetDbContext : DbContext
             entity.Property(e => e.AnnualHours).HasPrecision(18, 2).IsRequired();
             entity.Property(e => e.Note).HasMaxLength(200).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
+        });
+
+        // Configure Absence entity
+        modelBuilder.Entity<Absence>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Date).IsRequired();
+            entity.Property(e => e.Type).IsRequired();
+            entity.Property(e => e.DailyIncome).HasPrecision(18, 2).IsRequired();
+            entity.Property(e => e.Deduction).HasPrecision(18, 2).IsRequired();
+            entity.Property(e => e.Compensation).HasPrecision(18, 2).IsRequired();
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).IsRequired();
         });
 
         // Seed initial categories

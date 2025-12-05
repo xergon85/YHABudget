@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddTransient<IRecurringTransactionService>(sp => sp.GetRequiredService<RecurringTransactionService>());
         services.AddTransient<ICalculationService>(sp => sp.GetRequiredService<CalculationService>());
         services.AddTransient<ISalarySettingsService>(sp => sp.GetRequiredService<SalarySettingsService>());
+        services.AddTransient<IAbsenceService>(sp => sp.GetRequiredService<AbsenceService>());
 
         // Register WPF Services
         services.AddTransient<IDialogService, DialogService>();
@@ -30,11 +31,13 @@ public static class DependencyInjection
         services.AddSingleton<TransactionViewModel>();
         services.AddSingleton<RecurringTransactionViewModel>();
         services.AddSingleton<SalaryViewModel>();
+        services.AddSingleton<AbsenceViewModel>();
 
         // Register Dialog ViewModels (Transient - new instance per dialog)
         services.AddTransient<TransactionDialogViewModel>();
         services.AddTransient<RecurringTransactionDialogViewModel>();
         services.AddTransient<SalaryDialogViewModel>();
+        services.AddTransient<AbsenceDialogViewModel>();
 
         // Register MainWindow
         services.AddSingleton<MainWindow>();

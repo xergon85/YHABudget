@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using YHABudget.Core.Services;
 using YHABudget.Core.ViewModels;
 using YHABudget.Data.Models;
+using YHABudget.Data.Services;
 using YHABudget.WPF.Dialogs;
 
 namespace YHABudget.WPF.Services;
@@ -65,5 +66,20 @@ public class DialogService : IDialogService
 
         var result = dialog.ShowDialog();
         return result == true ? viewModel.ToSalarySettings() : null;
+    }
+
+    public Absence? ShowAbsenceDialog(Absence? absence, ISalarySettingsService salarySettingsService)
+    {
+        var viewModel = new AbsenceDialogViewModel(salarySettingsService);
+
+        viewModel.LoadAbsence(absence);
+
+        var dialog = new AbsenceDialog(viewModel)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        var result = dialog.ShowDialog();
+        return result == true ? viewModel.ToAbsence() : null;
     }
 }

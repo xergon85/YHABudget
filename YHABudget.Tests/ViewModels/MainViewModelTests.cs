@@ -40,7 +40,7 @@ public class MainViewModelTests : IDisposable
         _overviewViewModel = new OverviewViewModel(_recurringTransactionService, _calculationService);
         _transactionViewModel = new TransactionViewModel(_transactionService, _categoryService, _recurringTransactionService, _mockDialogService.Object);
         _recurringTransactionViewModel = new RecurringTransactionViewModel(_recurringTransactionService, _mockDialogService.Object);
-        _salaryViewModel = new SalaryViewModel(_salarySettingsService, _mockDialogService.Object);
+        _salaryViewModel = new SalaryViewModel(_salarySettingsService, _mockDialogService.Object, _recurringTransactionService, _categoryService);
     }
 
     [Fact]

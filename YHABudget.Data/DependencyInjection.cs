@@ -9,9 +9,12 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDataServices(this IServiceCollection services, string connectionString)
     {
-        // Register DbContext - Data layer controls the provider
-        services.AddDbContext<BudgetDbContext>(options =>
-            options.UseSqlite(connectionString));
+        // Register DbContext as Transient to avoid caching issues in Singleton ViewModels
+        // Each service call will get a fresh DbContext instance
+        services.AddDbContext<BudgetDbContext>(
+            options => options.UseSqlite(connectionString),
+            contextLifetime: ServiceLifetime.Transient,
+            optionsLifetime: ServiceLifetime.Transient);
 
         // Register Data Services as Transient to allow use in Singleton ViewModels
         services.AddTransient<TransactionService>();
@@ -19,6 +22,7 @@ public static class DependencyInjection
         services.AddTransient<RecurringTransactionService>();
         services.AddTransient<CalculationService>();
         services.AddTransient<SalarySettingsService>();
+        services.AddTransient<AbsenceService>();
 
         return services;
     }
