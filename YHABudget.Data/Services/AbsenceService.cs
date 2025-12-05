@@ -68,12 +68,13 @@ public class AbsenceService : IAbsenceService
         if (absence.Compensation <= 0)
             return;
 
-        // Get or create "Lön" category
-        var lonCategory = _context.Categories.FirstOrDefault(c => c.Name == "Lön" && c.Type == TransactionType.Income);
-        if (lonCategory == null)
+        // Get or create absence-specific income category for compensation
+        var categoryName = absence.Type == AbsenceType.Sick ? "Sjuklön" : "VAB";
+        var compensationCategory = _context.Categories.FirstOrDefault(c => c.Name == categoryName && c.Type == TransactionType.Income);
+        if (compensationCategory == null)
         {
-            lonCategory = new Category { Name = "Lön", Type = TransactionType.Income };
-            _context.Categories.Add(lonCategory);
+            compensationCategory = new Category { Name = categoryName, Type = TransactionType.Income };
+            _context.Categories.Add(compensationCategory);
             _context.SaveChanges();
         }
 
@@ -83,11 +84,11 @@ public class AbsenceService : IAbsenceService
 
         var compensationTransaction = new Transaction
         {
-            Description = $"Frånvaro ersättning - {absence.Type} ({absence.Date:yyyy-MM-dd})",
+            Description = $"Frånvaro ersättning ({absence.Date:yyyy-MM-dd})",
             Amount = absence.Compensation,
             Date = compensationDate,
             Type = TransactionType.Income,
-            CategoryId = lonCategory.Id
+            CategoryId = compensationCategory.Id
         };
 
         _context.Transactions.Add(compensationTransaction);
@@ -148,7 +149,7 @@ public class AbsenceService : IAbsenceService
             // Compensation transaction is in the next month
             var compensationTransactions = _context.Transactions
                 .Where(t => t.Type == TransactionType.Income &&
-                           t.Description.Contains($"Frånvaro ersättning - {absence.Type} ({absence.Date:yyyy-MM-dd})"))
+                           t.Description.Contains($"Frånvaro ersättning ({absence.Date:yyyy-MM-dd})"))
                 .ToList();
 
             _context.Transactions.RemoveRange(deductionTransactions);

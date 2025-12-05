@@ -336,7 +336,7 @@ public class AbsenceServiceTests : IDisposable
             }
             var monthTransactions = _transactionService.GetTransactionsByMonth(nextMonthStart);
             totalCompensation += monthTransactions
-                .Where(t => t.Type == TransactionType.Income && t.Description.Contains("Frånvaro ersättning - VAB"))
+                .Where(t => t.Type == TransactionType.Income && t.Description.Contains("Frånvaro ersättning"))
                 .Sum(t => t.Amount);
         }
 
