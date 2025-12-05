@@ -9,15 +9,16 @@ public class BudgetDbContext : DbContext
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
     public DbSet<Category> Categories { get; set; }
-    
+    public DbSet<SalarySettings> SalarySettings { get; set; }
+
     public BudgetDbContext(DbContextOptions<BudgetDbContext> options) : base(options)
     {
     }
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         // Configure Transaction entity
         modelBuilder.Entity<Transaction>(entity =>
         {
@@ -26,13 +27,13 @@ public class BudgetDbContext : DbContext
             entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
             entity.Property(e => e.Date).IsRequired();
             entity.Property(e => e.Type).IsRequired();
-            
+
             entity.HasOne(e => e.Category)
                 .WithMany(c => c.Transactions)
                 .HasForeignKey(e => e.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
         // Configure Category entity
         modelBuilder.Entity<Category>(entity =>
         {
@@ -40,7 +41,7 @@ public class BudgetDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Type).IsRequired();
         });
-        
+
         // Configure RecurringTransaction entity
         modelBuilder.Entity<RecurringTransaction>(entity =>
         {
@@ -51,17 +52,30 @@ public class BudgetDbContext : DbContext
             entity.Property(e => e.RecurrenceType).IsRequired();
             entity.Property(e => e.StartDate).IsRequired();
             entity.Property(e => e.IsActive).IsRequired();
-            
+
             entity.HasOne(e => e.Category)
                 .WithMany()
                 .HasForeignKey(e => e.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
+        // Configure SalarySettings entity
+        modelBuilder.Entity<SalarySettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AnnualIncome).HasPrecision(18, 2).IsRequired();
+            entity.Property(e => e.AnnualHours).HasPrecision(18, 2).IsRequired();
+            entity.Property(e => e.Note).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
+        });
+
         // Seed initial categories
         SeedCategories(modelBuilder);
+
+        // Seed default salary settings
+        SeedSalarySettings(modelBuilder);
     }
-    
+
     private void SeedCategories(ModelBuilder modelBuilder)
     {
         // Expense categories
@@ -75,11 +89,25 @@ public class BudgetDbContext : DbContext
             new Category { Id = 7, Name = "SaaS-produkter", Type = TransactionType.Expense },
             new Category { Id = 8, Name = "Försäkring", Type = TransactionType.Expense },
             new Category { Id = 9, Name = "Teknik", Type = TransactionType.Expense },
-            
+
             // Income categories
             new Category { Id = 10, Name = "Lön", Type = TransactionType.Income },
             new Category { Id = 11, Name = "Bidrag", Type = TransactionType.Income },
             new Category { Id = 12, Name = "Hobbyverksamhet", Type = TransactionType.Income }
+        );
+    }
+
+    private void SeedSalarySettings(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SalarySettings>().HasData(
+            new SalarySettings
+            {
+                Id = 1,
+                AnnualIncome = 12 * 25000m,
+                AnnualHours = 1920m,
+                Note = "Lön",
+                UpdatedAt = DateTime.Now
+            }
         );
     }
 }
